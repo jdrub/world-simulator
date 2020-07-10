@@ -23,7 +23,7 @@ const yVelocityHistoryState = atom({
 const yPositionState = atom({
     key: 'yPositionState',
     default: 0,
-});
+}); 
 
 const getVelocity = (velocityHistory) => velocityHistory.reduce((acc, curr) => acc + curr) / MAX_HISTORY_LENGTH;
 
@@ -74,16 +74,70 @@ export default function Landscape() {
         _setYPosition(newYPosition);
     }
 
+
+    const repeat = (func, time) => {
+        setTimeout(() => {
+            func();
+            repeat();
+        }, time)
+    }
+
+    let intervalId;
+    
+    const moveHelper = (newYVelocity = 0) => {
+        setYVelocityHistory([...yVelocityHistoryRef.current, newYVelocity].slice(1, MAX_HISTORY_LENGTH+1));
+        setYPosition(yPositionRef.current + 5*getVelocity(yVelocityHistoryRef.current));
+    }
+
+    const moveY = (newYVelocity = 0) => {
+        intervalId = setInterval(() => {
+            moveHelper(newYVelocity)
+        }, 100)
+    };
+
+    const stopMoveY = () => {
+        clearInterval(intervalId);
+        intervalId = setInterval(() => {
+            moveHelper(0);
+            if (getVelocity(yVelocityHistoryRef.current) === 0) {
+                clearInterval(intervalId);
+            }
+        }, 100)
+    }
+    
+    
+
     const handleKeyDown = ({ key, repeat }) => {
         if (repeat) {
             return;
         }
 
+        let newYVelocity;
+
         switch(key) {
             case 'ArrowUp':
             case 'w':
-                setYVelocityHistory([...yVelocityHistoryRef.current, 1].slice(1, MAX_HISTORY_LENGTH+1));
-                setYPosition(yPositionRef.current + 5*getVelocity(yVelocityHistoryRef.current));
+                newYVelocity = 1;
+                break;
+            case 'ArrowDown':
+            case 's':
+                newYVelocity = -1;
+                break;
+            default:
+                newYVelocity = yVelocityHistoryRef.current[yVelocityHistoryRef.current.length-1]
+                break;
+        }
+
+        moveY(newYVelocity);
+    }
+
+    const handleKeyUp = ({ key }) => {
+        switch(key) {
+            case 'ArrowUp':
+            case 'ArrowDown':
+            case 'w':
+            case 's':
+                stopMoveY();
                 break;
             default: break;
         }
@@ -91,14 +145,16 @@ export default function Landscape() {
 
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
-        // window.addEventListener('keyup', handleKeyUp);
+        window.addEventListener('keyup', handleKeyUp);
 
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
-            // window.removeEventListener('keyup', handleKeyUp);
+            window.removeEventListener('keyup', handleKeyUp);
         };
     }, []);
 
+    console.log('yVelocityHistory: ', yVelocityHistoryRef.current);
+    
     return(
         <Background>
             <LandscapeWrapper offsetY={yPositionRef.current}>
