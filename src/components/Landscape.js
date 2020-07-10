@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
+import { atom, useRecoilState, useRecoilValue, selector } from 'recoil'
+
+// import { currentXDirectionState, currentYDirectionState, xDirectionState, yDirectionState } from './InputHandler';
 
 import Tile, { TILE_TYPES } from './Tile';
 import {
@@ -9,6 +12,20 @@ import {
     TILE_TOP_SURFACE_HEIGHT_PX,
     TILE_Z_HEIGHT_PX,
 } from '../constants';
+
+const MAX_HISTORY_LENGTH = 5;
+
+const yVelocityHistoryState = atom({
+    key: 'yVelocityHistoryState',
+    default: new Array(MAX_HISTORY_LENGTH).fill(0),
+});
+
+const yPositionState = atom({
+    key: 'yPositionState',
+    default: 0,
+});
+
+const getVelocity = (velocityHistory) => velocityHistory.reduce((acc, curr) => acc + curr) / MAX_HISTORY_LENGTH;
 
 export default function Landscape() {
 
@@ -33,11 +50,58 @@ export default function Landscape() {
         })
     });
 
-    console.log('tileArrWithOffsets: ', tileArrWithOffsets);
+    // const xDirection = useRecoilValue(currentXDirectionState);
+    // const yDirection = useRecoilValue(currentYDirectionState);
+
+    // const [xdir, setX] = useRecoilState(xDirectionState);
+    // console.log('xdir: ', xdir);
+
+    // console.log('xDirection: ', xDirection);
+    // console.log('yDirection: ', yDirection);
+
+    const [yVelocityHistory, _setYVelocityHistory] = useRecoilState(yVelocityHistoryState);
+    
+    const yVelocityHistoryRef = useRef(yVelocityHistory);
+    const setYVelocityHistory = (newYVelocityHistory) => {
+        yVelocityHistoryRef.current = newYVelocityHistory;
+        _setYVelocityHistory(yVelocityHistory);
+    }
+
+    const [yPosition, _setYPosition] = useRecoilState(yPositionState);
+    const yPositionRef = useRef(yPosition);
+    const setYPosition = (newYPosition) => {
+        yPositionRef.current = newYPosition;
+        _setYPosition(newYPosition);
+    }
+
+    const handleKeyDown = ({ key, repeat }) => {
+        if (repeat) {
+            return;
+        }
+
+        switch(key) {
+            case 'ArrowUp':
+            case 'w':
+                setYVelocityHistory([...yVelocityHistoryRef.current, 1].slice(1, MAX_HISTORY_LENGTH+1));
+                setYPosition(yPositionRef.current + 5*getVelocity(yVelocityHistoryRef.current));
+                break;
+            default: break;
+        }
+    }
+
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        // window.addEventListener('keyup', handleKeyUp);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            // window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, []);
 
     return(
         <Background>
-            <LandscapeWrapper>
+            <LandscapeWrapper offsetY={yPositionRef.current}>
 
                 {tileArrWithOffsets}
             </LandscapeWrapper>
@@ -55,12 +119,12 @@ const Background = styled.div`
 const LandscapeWrapper = styled.div`
     position: relative;
 
-    left: 50%;
-    top: 50%;
+    left: calc(50% + ${p => -1 * p.offsetY*5}px);
+    top: calc(50% + ${p => .35*p.offsetY*5}px);
     transform: translateX(-50%) translateY(-50%);
 
     width: ${TILE_WIDTH_PX * BOARD_WIDTH_TILES}px;
     height: ${TILE_TOP_SURFACE_HEIGHT_PX * BOARD_HEIGHT_TILES + TILE_Z_HEIGHT_PX}px;
 
-    
+    transition: left 0.2s linear, top 0.2s linear;
 `;

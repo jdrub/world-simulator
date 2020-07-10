@@ -1,12 +1,13 @@
 import React from 'react';
-import './App.css';
+
+import { RecoilRoot } from 'recoil';
 import Landscape from './components/Landscape';
 
 function App() {
   return (
-    <div>
+    <RecoilRoot>
         <Landscape />
-    </div>
+    </RecoilRoot>
   );
 }
 
