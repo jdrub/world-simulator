@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 import { grassTile, waterTile } from '../images';
 // import getRandomInt from '../utils/getRandomInt';
-import { TILE_SIZE_PX } from '../constants';
+import { TILE_WIDTH_PX } from '../constants';
 
 export const TILE_TYPES = {
     WATER: 'water',
@@ -23,8 +23,9 @@ export default ({ tileType, xOffsetPx, yOffsetPx }) => {
 
 
 const Tile = styled.img`
-    width: ${TILE_SIZE_PX}px;
+    width: ${TILE_WIDTH_PX}px;
     position: absolute;
-    left: ${p => p.xOffsetPx}px;
+    left: calc(${p => p.xOffsetPx}px + 50%);
     top: ${p => p.yOffsetPx}px;
+    transform: translateX(-50%);
 `;

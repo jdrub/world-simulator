@@ -2,7 +2,13 @@ import React from 'react';
 import styled from 'styled-components';
 
 import Tile, { TILE_TYPES } from './Tile';
-import { TILE_SIZE_PX, BOARD_HEIGHT_TILES, BOARD_WIDTH_TILES } from '../constants';
+import {
+    BOARD_HEIGHT_TILES,
+    BOARD_WIDTH_TILES,
+    TILE_WIDTH_PX,
+    TILE_TOP_SURFACE_HEIGHT_PX,
+    TILE_Z_HEIGHT_PX,
+} from '../constants';
 
 export default function Landscape() {
 
@@ -21,8 +27,8 @@ export default function Landscape() {
         return row.map((tileType, colIdx) => {
             return <Tile
                 tileType={tileType}
-                xOffsetPx={colIdx*TILE_SIZE_PX/2 - (rowIdx*TILE_SIZE_PX/2)}
-                yOffsetPx={(colIdx*20) + rowIdx*TILE_SIZE_PX/5.5}
+                xOffsetPx={colIdx*TILE_WIDTH_PX/2 - (rowIdx*TILE_WIDTH_PX/2)}
+                yOffsetPx={(colIdx*20) + rowIdx*18}
                 key={rowIdx*BOARD_HEIGHT_TILES + colIdx} />
         })
     });
@@ -53,8 +59,8 @@ const LandscapeWrapper = styled.div`
     top: 50%;
     transform: translateX(-50%) translateY(-50%);
 
-    width: ${TILE_SIZE_PX * BOARD_WIDTH_TILES}px;
-    height: ${TILE_SIZE_PX * BOARD_HEIGHT_TILES}px;
+    width: ${TILE_WIDTH_PX * BOARD_WIDTH_TILES}px;
+    height: ${TILE_TOP_SURFACE_HEIGHT_PX * BOARD_HEIGHT_TILES + TILE_Z_HEIGHT_PX}px;
 
     
 `;
