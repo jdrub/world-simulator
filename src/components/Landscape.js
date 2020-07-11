@@ -14,16 +14,27 @@ import {
 } from '../constants';
 
 const MAX_HISTORY_LENGTH = 5;
+const INTERVAL_MS = 100;
 
 const yVelocityHistoryState = atom({
     key: 'yVelocityHistoryState',
     default: new Array(MAX_HISTORY_LENGTH).fill(0),
 });
 
+const xVelocityHistoryState = atom({
+    key: 'xVelocityHistoryState',
+    default: new Array(MAX_HISTORY_LENGTH).fill(0),
+});
+
 const yPositionState = atom({
     key: 'yPositionState',
     default: 0,
-}); 
+});
+
+const xPositionState = atom({
+    key: 'xPositionState',
+    default: 0,
+});
 
 const getVelocity = (velocityHistory) => velocityHistory.reduce((acc, curr) => acc + curr) / MAX_HISTORY_LENGTH;
 
@@ -60,11 +71,18 @@ export default function Landscape() {
     // console.log('yDirection: ', yDirection);
 
     const [yVelocityHistory, _setYVelocityHistory] = useRecoilState(yVelocityHistoryState);
+    const [xVelocityHistory, _setXVelocityHistory] = useRecoilState(xVelocityHistoryState);
     
     const yVelocityHistoryRef = useRef(yVelocityHistory);
     const setYVelocityHistory = (newYVelocityHistory) => {
         yVelocityHistoryRef.current = newYVelocityHistory;
         _setYVelocityHistory(yVelocityHistory);
+    }
+
+    const xVelocityHistoryRef = useRef(xVelocityHistory);
+    const setXVelocityHistory = (newXVelocityHistory) => {
+        xVelocityHistoryRef.current = newXVelocityHistory;
+        _setXVelocityHistory(xVelocityHistory);
     }
 
     const [yPosition, _setYPosition] = useRecoilState(yPositionState);
@@ -74,45 +92,65 @@ export default function Landscape() {
         _setYPosition(newYPosition);
     }
 
-
-    const repeat = (func, time) => {
-        setTimeout(() => {
-            func();
-            repeat();
-        }, time)
+    const [xPosition, _setXPosition] = useRecoilState(xPositionState);
+    const xPositionRef = useRef(xPosition);
+    const setXPosition = (newXPosition) => {
+        xPositionRef.current = newXPosition;
+        _setXPosition(newXPosition);
     }
 
-    let intervalId;
+    let moveYIntervalId;
+    let moveXIntervalId;
     
-    const moveHelper = (newYVelocity = 0) => {
+    const moveYHelper = (newYVelocity = 0) => {
         setYVelocityHistory([...yVelocityHistoryRef.current, newYVelocity].slice(1, MAX_HISTORY_LENGTH+1));
         setYPosition(yPositionRef.current + 5*getVelocity(yVelocityHistoryRef.current));
-    }
+    };
+
+    const moveXHelper = (newXVelocity = 0) => {
+        setXVelocityHistory([...xVelocityHistoryRef.current, newXVelocity].slice(1, MAX_HISTORY_LENGTH+1));
+        setXPosition(xPositionRef.current + 5*getVelocity(xVelocityHistoryRef.current));
+    };
 
     const moveY = (newYVelocity = 0) => {
-        intervalId = setInterval(() => {
-            moveHelper(newYVelocity)
-        }, 100)
+        moveYIntervalId = setInterval(() => {
+            moveYHelper(newYVelocity)
+        }, INTERVAL_MS)
+    };
+
+    const moveX = (newXVelocity = 0) => {
+        moveXIntervalId = setInterval(() => {
+            moveXHelper(newXVelocity)
+        }, INTERVAL_MS)
     };
 
     const stopMoveY = () => {
-        clearInterval(intervalId);
-        intervalId = setInterval(() => {
-            moveHelper(0);
+        clearInterval(moveYIntervalId);
+        const stopMoveIntervalId = setInterval(() => {
+            moveYHelper(0);
             if (getVelocity(yVelocityHistoryRef.current) === 0) {
-                clearInterval(intervalId);
+                clearInterval(stopMoveIntervalId);
             }
-        }, 100)
+        }, INTERVAL_MS)
+    }
+
+    const stopMoveX = () => {
+        clearInterval(moveXIntervalId);
+        const stopMoveIntervalId = setInterval(() => {
+            moveXHelper(0);
+            if (getVelocity(xVelocityHistoryRef.current) === 0) {
+                clearInterval(stopMoveIntervalId);
+            }
+        }, INTERVAL_MS)
     }
     
-    
-
     const handleKeyDown = ({ key, repeat }) => {
         if (repeat) {
             return;
         }
 
         let newYVelocity;
+        let newXVelocity;
 
         switch(key) {
             case 'ArrowUp':
@@ -123,11 +161,19 @@ export default function Landscape() {
             case 's':
                 newYVelocity = -1;
                 break;
+            case 'ArrowLeft':
+            case 'a':
+                newXVelocity = -1;
+                break;
+            case 'ArrowRight':
+            case 'd':
+                newXVelocity = 1;
+                break;
             default:
-                newYVelocity = yVelocityHistoryRef.current[yVelocityHistoryRef.current.length-1]
                 break;
         }
 
+        moveX(newXVelocity);
         moveY(newYVelocity);
     }
 
@@ -138,6 +184,12 @@ export default function Landscape() {
             case 'w':
             case 's':
                 stopMoveY();
+                break;
+            case 'ArrowLeft':
+            case 'ArrowRight':
+            case 'a':
+            case 'd':
+                stopMoveX();
                 break;
             default: break;
         }
@@ -153,11 +205,12 @@ export default function Landscape() {
         };
     }, []);
 
-    console.log('yVelocityHistory: ', yVelocityHistoryRef.current);
+    // console.log('yVelocityHistory: ', yVelocityHistoryRef.current);
+    // console.log('xVelocityHistory: ', xVelocityHistoryRef.current);
     
     return(
         <Background>
-            <LandscapeWrapper offsetY={yPositionRef.current}>
+            <LandscapeWrapper offsetY={yPositionRef.current} offsetX={xPositionRef.current}>
 
                 {tileArrWithOffsets}
             </LandscapeWrapper>
@@ -170,17 +223,22 @@ const Background = styled.div`
     background-color: #454545;
     width: 100vw;
     height: 100vh;
+    overflow: hidden;
 `;
 
-const LandscapeWrapper = styled.div`
+const LandscapeWrapper = styled.div.attrs(p => ({
+    style: {
+        transform: `translateX(-50%) translateX(calc(${-1 * p.offsetY*5}px + ${p.offsetX*5}px)) translateY(-50%) translateY(calc(${.35*p.offsetY*5}px + ${.35*p.offsetX*5}px))`
+    },
+  }))`
     position: relative;
 
-    left: calc(50% + ${p => -1 * p.offsetY*5}px);
-    top: calc(50% + ${p => .35*p.offsetY*5}px);
+    left: 50%;
+    top: 50%;
     transform: translateX(-50%) translateY(-50%);
 
     width: ${TILE_WIDTH_PX * BOARD_WIDTH_TILES}px;
     height: ${TILE_TOP_SURFACE_HEIGHT_PX * BOARD_HEIGHT_TILES + TILE_Z_HEIGHT_PX}px;
 
-    transition: left 0.2s linear, top 0.2s linear;
-`;
+    transition: transform 0.2s linear;
+  `;
