@@ -12,7 +12,7 @@ import {
     TILE_Z_HEIGHT_PX,
 } from '../../constants';
 
-const MAX_HISTORY_LENGTH = 5;
+const MAX_HISTORY_LENGTH = 3;
 const INTERVAL_MS = 100;
 
 const yVelocityHistoryState = atom({
@@ -38,9 +38,6 @@ const xPositionState = atom({
 const getVelocity = (velocityHistory) => velocityHistory.reduce((acc, curr) => acc + curr) / MAX_HISTORY_LENGTH;
 
 export default function Landscape() {
-
-    const tileArray = useMemo(() => buildMap(), []);
-
     const [yVelocityHistory, _setYVelocityHistory] = useRecoilState(yVelocityHistoryState);
     const [xVelocityHistory, _setXVelocityHistory] = useRecoilState(xVelocityHistoryState);
     
@@ -121,12 +118,16 @@ export default function Landscape() {
 
     const stopMove = ({ intervalId, velocityHistoryRef, setVelocityHistory, positionRef, setPosition }) => {
         clearInterval(intervalId);
-        const stopMoveIntervalId = setInterval(() => {
-            moveHelper({ newVelocity: 0, velocityHistoryRef, setVelocityHistory, positionRef, setPosition });
-            if (getVelocity(velocityHistoryRef.current) === 0) {
-                clearInterval(stopMoveIntervalId);
-            }
-        }, INTERVAL_MS)
+
+        setVelocityHistory(new Array(MAX_HISTORY_LENGTH).fill(0));
+        // comment the above and uncomment the following to have a momentum-stop effect
+
+        // const stopMoveIntervalId = setInterval(() => {
+        //     moveHelper({ newVelocity: 0, velocityHistoryRef, setVelocityHistory, positionRef, setPosition });
+        //     if (getVelocity(velocityHistoryRef.current) === 0) {
+        //         clearInterval(stopMoveIntervalId);
+        //     }
+        // }, INTERVAL_MS)
     }
 
     const moveHelper = ({ newVelocity, velocityHistoryRef, setVelocityHistory, positionRef, setPosition }) => {
@@ -194,6 +195,8 @@ export default function Landscape() {
             window.removeEventListener('keyup', handleKeyUp);
         };
     }, []);
+
+    const tileArray = useMemo(() => buildMap(yPositionRef.current, xPositionRef.current), []);
 
     return(
         <Background>
