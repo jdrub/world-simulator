@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import styled from 'styled-components';
 import { atom, useRecoilState, useRecoilValue, selector } from 'recoil'
 
@@ -39,7 +39,7 @@ const getVelocity = (velocityHistory) => velocityHistory.reduce((acc, curr) => a
 
 export default function Landscape() {
 
-    const tileArray = buildMap();
+    const tileArray = useMemo(() => buildMap(), []);
 
     const [yVelocityHistory, _setYVelocityHistory] = useRecoilState(yVelocityHistoryState);
     const [xVelocityHistory, _setXVelocityHistory] = useRecoilState(xVelocityHistoryState);
