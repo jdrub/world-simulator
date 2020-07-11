@@ -209,7 +209,7 @@ export default function Landscape() {
 
 
 const Background = styled.div`
-    background-color: #454545;
+    background-color: #151515;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
