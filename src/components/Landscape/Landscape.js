@@ -153,11 +153,11 @@ export default function Landscape() {
                 break;
             case 'ArrowLeft':
             case 'a':
-                newXVelocity = -1;
+                newXVelocity = 1;
                 break;
             case 'ArrowRight':
             case 'd':
-                newXVelocity = 1;
+                newXVelocity = -1;
                 break;
             default:
                 break;
