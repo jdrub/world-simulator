@@ -2,8 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { atom, useRecoilState, useRecoilValue, selector } from 'recoil'
 
-// import { currentXDirectionState, currentYDirectionState, xDirectionState, yDirectionState } from './InputHandler';
-
 import Tile, { TILE_TYPES } from './Tile';
 import {
     BOARD_HEIGHT_TILES,
@@ -60,15 +58,6 @@ export default function Landscape() {
                 key={rowIdx*BOARD_HEIGHT_TILES + colIdx} />
         })
     });
-
-    // const xDirection = useRecoilValue(currentXDirectionState);
-    // const yDirection = useRecoilValue(currentYDirectionState);
-
-    // const [xdir, setX] = useRecoilState(xDirectionState);
-    // console.log('xdir: ', xdir);
-
-    // console.log('xDirection: ', xDirection);
-    // console.log('yDirection: ', yDirection);
 
     const [yVelocityHistory, _setYVelocityHistory] = useRecoilState(yVelocityHistoryState);
     const [xVelocityHistory, _setXVelocityHistory] = useRecoilState(xVelocityHistoryState);
@@ -175,8 +164,8 @@ export default function Landscape() {
                 break;
         }
 
-        moveX(newXVelocity);
-        moveY(newYVelocity);
+        newXVelocity && moveX(newXVelocity);
+        newYVelocity && moveY(newYVelocity);
     }
 
     const handleKeyUp = ({ key }) => {
@@ -207,9 +196,6 @@ export default function Landscape() {
         };
     }, []);
 
-    // console.log('yVelocityHistory: ', yVelocityHistoryRef.current);
-    // console.log('xVelocityHistory: ', xVelocityHistoryRef.current);
-    
     return(
         <Background>
             <LandscapeWrapper offsetY={yPositionRef.current} offsetX={xPositionRef.current}>
@@ -230,17 +216,21 @@ const Background = styled.div`
 
 const LandscapeWrapper = styled.div.attrs(p => ({
     style: {
-        transform: `translateX(-50%) translateX(calc(${-1 * p.offsetY*5}px + ${p.offsetX*5}px)) translateY(-50%) translateY(calc(${.35*p.offsetY*5}px + ${.35*p.offsetX*5}px))`
+        transform: `
+            translateX(-50%)
+            translateY(-50%)
+            translateX(calc(${-1 * p.offsetY*5}px + ${p.offsetX*5}px))
+            translateY(calc(${.35*p.offsetY*5}px + ${.35*p.offsetX*5}px))`
     },
   }))`
     position: relative;
 
     left: 50%;
     top: 50%;
-    transform: translateX(-50%) translateY(-50%);
 
     width: ${TILE_WIDTH_PX * BOARD_WIDTH_TILES}px;
     height: ${TILE_TOP_SURFACE_HEIGHT_PX * BOARD_HEIGHT_TILES + TILE_Z_HEIGHT_PX}px;
 
     transition: transform 0.1s linear;
+    backface-visibility: hidden; /* this prevents jumpy css transitions in firefox */
   `;
