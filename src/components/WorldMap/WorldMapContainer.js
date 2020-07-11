@@ -197,7 +197,7 @@ export default function Landscape() {
 
     return(
         <Background>
-            <Wrapper offsetY={yPositionRef.current} offsetX={xPositionRef.current}>
+            <Wrapper offsetY={yPosition} offsetX={xPosition}>
                 <WorldMapView />
             </Wrapper>
         </Background>
