@@ -113,12 +113,14 @@ export default function Landscape() {
     };
 
     const moveY = (newYVelocity = 0) => {
+        clearInterval(moveYIntervalId);
         moveYIntervalId = setInterval(() => {
             moveYHelper(newYVelocity)
         }, INTERVAL_MS)
     };
 
     const moveX = (newXVelocity = 0) => {
+        clearInterval(moveXIntervalId);
         moveXIntervalId = setInterval(() => {
             moveXHelper(newXVelocity)
         }, INTERVAL_MS)
@@ -240,5 +242,5 @@ const LandscapeWrapper = styled.div.attrs(p => ({
     width: ${TILE_WIDTH_PX * BOARD_WIDTH_TILES}px;
     height: ${TILE_TOP_SURFACE_HEIGHT_PX * BOARD_HEIGHT_TILES + TILE_Z_HEIGHT_PX}px;
 
-    transition: transform 0.2s linear;
+    transition: transform 0.1s linear;
   `;
