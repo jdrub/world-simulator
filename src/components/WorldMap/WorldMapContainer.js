@@ -9,6 +9,7 @@ import {
     TILE_WIDTH_PX,
     TILE_TOP_SURFACE_HEIGHT_PX,
     TILE_Z_HEIGHT_PX,
+    MOVEMENT_SPEED_FACTOR,
 } from '../../constants';
 
 const MAX_HISTORY_LENGTH = 3;
@@ -24,12 +25,12 @@ const xVelocityHistoryState = atom({
     default: new Array(MAX_HISTORY_LENGTH).fill(0),
 });
 
-const yOffsetState = atom({
+export const yOffsetState = atom({
     key: 'yOffsetState',
     default: 0,
 });
 
-const xOffsetState = atom({
+export const xOffsetState = atom({
     key: 'xOffsetState',
     default: 0,
 });
@@ -131,7 +132,7 @@ export default function Landscape() {
 
     const moveHelper = ({ newVelocity, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset }) => {
         setVelocityHistory([...velocityHistoryRef.current, newVelocity].slice(1, MAX_HISTORY_LENGTH+1));
-        setOffset(offsetRef.current + 5*getVelocity(velocityHistoryRef.current));
+        setOffset(offsetRef.current + MOVEMENT_SPEED_FACTOR*getVelocity(velocityHistoryRef.current));
     };
     
     const handleKeyDown = ({ key, repeat }) => {
