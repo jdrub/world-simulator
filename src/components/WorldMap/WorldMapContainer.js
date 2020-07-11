@@ -24,13 +24,13 @@ const xVelocityHistoryState = atom({
     default: new Array(MAX_HISTORY_LENGTH).fill(0),
 });
 
-const yPositionState = atom({
-    key: 'yPositionState',
+const yOffsetState = atom({
+    key: 'yOffsetState',
     default: 0,
 });
 
-const xPositionState = atom({
-    key: 'xPositionState',
+const xOffsetState = atom({
+    key: 'xOffsetState',
     default: 0,
 });
 
@@ -52,18 +52,18 @@ export default function Landscape() {
         _setXVelocityHistory(xVelocityHistory);
     }
 
-    const [yPosition, _setYPosition] = useRecoilState(yPositionState);
-    const yPositionRef = useRef(yPosition);
-    const setYPosition = (newYPosition) => {
-        yPositionRef.current = newYPosition;
-        _setYPosition(newYPosition);
+    const [yOffset, _setYOffset] = useRecoilState(yOffsetState);
+    const yOffsetRef = useRef(yOffset);
+    const setYOffset = (newYOffset) => {
+        yOffsetRef.current = newYOffset;
+        _setYOffset(newYOffset);
     }
 
-    const [xPosition, _setXPosition] = useRecoilState(xPositionState);
-    const xPositionRef = useRef(xPosition);
-    const setXPosition = (newXPosition) => {
-        xPositionRef.current = newXPosition;
-        _setXPosition(newXPosition);
+    const [xOffset, _setXOffset] = useRecoilState(xOffsetState);
+    const xOffsetRef = useRef(xOffset);
+    const setXOffset = (newXOffset) => {
+        xOffsetRef.current = newXOffset;
+        _setXOffset(newXOffset);
     }
 
     let moveYIntervalId;
@@ -76,8 +76,8 @@ export default function Landscape() {
                 newVelocity,
                 velocityHistoryRef: yVelocityHistoryRef,
                 setVelocityHistory: setYVelocityHistory,
-                positionRef: yPositionRef,
-                setPosition: setYPosition,
+                offsetRef: yOffsetRef,
+                setOffset: setYOffset,
             });
         }, INTERVAL_MS)
     };
@@ -89,8 +89,8 @@ export default function Landscape() {
                 newVelocity,
                 velocityHistoryRef: xVelocityHistoryRef,
                 setVelocityHistory: setXVelocityHistory,
-                positionRef: xPositionRef,
-                setPosition: setXPosition,
+                offsetRef: xOffsetRef,
+                setOffset: setXOffset,
             });
         }, INTERVAL_MS)
     };
@@ -100,8 +100,8 @@ export default function Landscape() {
             intervalId: moveXIntervalId,
             velocityHistoryRef: xVelocityHistoryRef,
             setVelocityHistory: setXVelocityHistory,
-            positionRef: xPositionRef,
-            setPosition: setXPosition,
+            offsetRef: xOffsetRef,
+            setOffset: setXOffset,
         });
     }
 
@@ -110,28 +110,28 @@ export default function Landscape() {
             intervalId: moveYIntervalId,
             velocityHistoryRef: yVelocityHistoryRef,
             setVelocityHistory: setYVelocityHistory,
-            positionRef: yPositionRef,
-            setPosition: setYPosition,
+            offsetRef: yOffsetRef,
+            setOffset: setYOffset,
         });
     }
 
-    const stopMove = ({ intervalId, velocityHistoryRef, setVelocityHistory, positionRef, setPosition }) => {
+    const stopMove = ({ intervalId, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset }) => {
         clearInterval(intervalId);
 
         setVelocityHistory(new Array(MAX_HISTORY_LENGTH).fill(0));
         // comment the above and uncomment the following to have a momentum-stop effect
 
         // const stopMoveIntervalId = setInterval(() => {
-        //     moveHelper({ newVelocity: 0, velocityHistoryRef, setVelocityHistory, positionRef, setPosition });
+        //     moveHelper({ newVelocity: 0, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset });
         //     if (getVelocity(velocityHistoryRef.current) === 0) {
         //         clearInterval(stopMoveIntervalId);
         //     }
         // }, INTERVAL_MS)
     }
 
-    const moveHelper = ({ newVelocity, velocityHistoryRef, setVelocityHistory, positionRef, setPosition }) => {
+    const moveHelper = ({ newVelocity, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset }) => {
         setVelocityHistory([...velocityHistoryRef.current, newVelocity].slice(1, MAX_HISTORY_LENGTH+1));
-        setPosition(positionRef.current + 5*getVelocity(velocityHistoryRef.current));
+        setOffset(offsetRef.current + 5*getVelocity(velocityHistoryRef.current));
     };
     
     const handleKeyDown = ({ key, repeat }) => {
@@ -197,7 +197,7 @@ export default function Landscape() {
 
     return(
         <Background>
-            <Wrapper offsetY={yPosition} offsetX={xPosition}>
+            <Wrapper offsetY={yOffset} offsetX={xOffset}>
                 <WorldMapView />
             </Wrapper>
         </Background>
