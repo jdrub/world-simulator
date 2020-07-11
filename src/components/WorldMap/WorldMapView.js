@@ -6,10 +6,12 @@ import { xOffsetState, yOffsetState } from './WorldMapContainer';
 import Tile, { TILE_TYPES } from '../Tile';
 import {
     TILE_WIDTH_PX,
+    TILE_HEIGHT_PX,
     BOARD_HEIGHT_TILES,
     BOARD_WIDTH_TILES,
     VISIBLE_HEIGHT_TILES,
     VISIBLE_WIDTH_TILES,
+    TILE_ISO_WIDTH_PX,
 } from '../../constants';
 
 const positionState = atom({
@@ -32,23 +34,49 @@ const buildFullTileMap = () => {
     return tileArr;
 }
 
-const buildVisibleTileMap = ({ fullTileMap, position, xOffset, yOffset, setXOffset, setYOffset }) => {
+
+const xOffsetToPx = (xOffset) => {
+    return (9.627 * xOffset)
+}
+
+const pxToXOffset = (px) => {
+    return px / 9.627;
+}
+
+const buildVisibleTileMap = ({ fullTileMap, position, setPosition, xOffset, yOffset, setXOffset, setYOffset }) => {
     const visibleTileArr = [[]];
 
-    let leftBound = Math.floor(position.col - VISIBLE_WIDTH_TILES/2);
-    let rightBound = Math.ceil(position.col + VISIBLE_WIDTH_TILES/2);
-    let topBound = Math.floor(position.row - VISIBLE_HEIGHT_TILES/2);
-    let bottomBound = Math.ceil(position.row + VISIBLE_HEIGHT_TILES/2);
+    // if x offset is > the width of a block (could be 3 blocks in the future if there are performance issues) then update position.col accordingly, and also update the x offset by the width of a few tiles.
 
-    leftBound = leftBound < 0 ? 0 : leftBound;
-    rightBound = rightBound > BOARD_WIDTH_TILES - 1 ? BOARD_WIDTH_TILES - 1 : rightBound;
-    topBound = topBound < 0 ? 0 : topBound;
-    bottomBound = bottomBound > BOARD_HEIGHT_TILES - 1 ? BOARD_HEIGHT_TILES - 1 : bottomBound;
+    // let currPosition = position;
 
-    console.log('leftBBound: ', leftBound);
-    console.log('rightBound: ', rightBound);
-    console.log('topBound: ', topBound);
-    console.log('bottomBound: ', bottomBound);
+    // if (xOffset > pxToXOffset(TILE_ISO_WIDTH_PX)) {
+    //     const newPosition = { col: Math.max(position.col-1, BOARD_WIDTH_TILES-1), row: position.row };
+    //     setPosition(newPosition);
+    //     setXOffset(xOffset - pxToXOffset(TILE_ISO_WIDTH_PX));
+
+    //     currPosition = newPosition;
+    // } else if (Math.abs(xOffset) > pxToXOffset(TILE_ISO_WIDTH_PX)) {
+    //     const newPosition = { col: Math.min(position.col+1, 0), row: position.row };
+    //     setPosition(newPosition);
+    //     setXOffset(xOffset + pxToXOffset(TILE_ISO_WIDTH_PX));
+
+    //     currPosition = newPosition;
+    // }
+
+    
+
+    const currPosition = {
+        row: 4,
+        col: Math.floor(xOffsetToPx(xOffset)/TILE_ISO_WIDTH_PX) + 4,
+    };
+
+    console.log('currPosition:', currPosition);
+
+    let leftBound = Math.max(Math.floor(currPosition.col - VISIBLE_WIDTH_TILES/2), 0);
+    let rightBound = Math.min(Math.ceil(currPosition.col + VISIBLE_WIDTH_TILES/2), BOARD_WIDTH_TILES - 1);
+    let topBound = Math.max(Math.floor(currPosition.row - VISIBLE_HEIGHT_TILES/2), 0);
+    let bottomBound = Math.min(Math.ceil(currPosition.row + VISIBLE_HEIGHT_TILES/2), BOARD_WIDTH_TILES - 1);
 
     for(let row = topBound, i = 0; row <= bottomBound; row++, i++) {
         visibleTileArr[i] = [];
@@ -57,9 +85,8 @@ const buildVisibleTileMap = ({ fullTileMap, position, xOffset, yOffset, setXOffs
         }
     }
 
-    console.log('visibleTileArr: ', visibleTileArr);
-
-    return visibleTileArr;
+    // return visibleTileArr;
+    return fullTileMap;
 }
 
 const WorldMapView = () => {
@@ -69,14 +96,15 @@ const WorldMapView = () => {
     const [xOffset, setXOffset] = useRecoilState(xOffsetState);
     const [yOffset, setYOffset] = useRecoilState(yOffsetState);
 
-    const visibleTileArr = buildVisibleTileMap({ fullTileMap, position, xOffset, yOffset, setXOffset, setYOffset });
+    console.log('xOffset: ', xOffset);
+    const visibleTileArr = buildVisibleTileMap({ fullTileMap, position, setPosition, xOffset, yOffset, setXOffset, setYOffset });
 
     const tileArrWithOffsets = visibleTileArr.map((row, rowIdx) => {
         return row.map((tileType, colIdx) => {
             return <Tile
                 tileType={tileType}
                 xOffsetPx={colIdx*TILE_WIDTH_PX/2 - (rowIdx*TILE_WIDTH_PX/2)}
-                yOffsetPx={(colIdx*20) + rowIdx*18}
+                yOffsetPx={(colIdx*TILE_HEIGHT_PX/2) + (rowIdx*TILE_HEIGHT_PX/2)}
                 key={rowIdx*BOARD_HEIGHT_TILES + colIdx} />
         })
     });

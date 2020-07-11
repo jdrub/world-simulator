@@ -7,6 +7,7 @@ import {
     BOARD_HEIGHT_TILES,
     BOARD_WIDTH_TILES,
     TILE_WIDTH_PX,
+    TILE_HEIGHT_PX,
     TILE_TOP_SURFACE_HEIGHT_PX,
     TILE_Z_HEIGHT_PX,
     MOVEMENT_SPEED_FACTOR,
@@ -218,8 +219,9 @@ const Wrapper = styled.div.attrs(p => ({
         transform: `
             translateX(-50%)
             translateY(-50%)
-            translateX(calc(${-1 * p.offsetY*5}px + ${p.offsetX*5}px))
-            translateY(calc(${.35*p.offsetY*5}px + ${.35*p.offsetX*5}px))`
+            translateX(${p.offsetX + TILE_WIDTH_PX/TILE_HEIGHT_PX * p.offsetY * -1}px)
+            translateY(${TILE_HEIGHT_PX/TILE_WIDTH_PX * p.offsetX + p.offsetY}px)
+            `
     },
   }))`
     position: relative;
@@ -228,7 +230,7 @@ const Wrapper = styled.div.attrs(p => ({
     top: 50%;
 
     width: ${TILE_WIDTH_PX * BOARD_WIDTH_TILES}px;
-    height: ${TILE_TOP_SURFACE_HEIGHT_PX * BOARD_HEIGHT_TILES + TILE_Z_HEIGHT_PX}px;
+    height: ${TILE_HEIGHT_PX * BOARD_HEIGHT_TILES + TILE_Z_HEIGHT_PX}px;
 
     transition: transform 0.1s linear;
     backface-visibility: hidden; /* this prevents jumpy css transitions in firefox */
