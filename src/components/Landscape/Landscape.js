@@ -2,14 +2,15 @@ import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { atom, useRecoilState, useRecoilValue, selector } from 'recoil'
 
-import Tile, { TILE_TYPES } from './Tile';
+import buildMap from './buildMap';
+import Tile, { TILE_TYPES } from '../Tile';
 import {
     BOARD_HEIGHT_TILES,
     BOARD_WIDTH_TILES,
     TILE_WIDTH_PX,
     TILE_TOP_SURFACE_HEIGHT_PX,
     TILE_Z_HEIGHT_PX,
-} from '../constants';
+} from '../../constants';
 
 const MAX_HISTORY_LENGTH = 5;
 const INTERVAL_MS = 100;
@@ -38,26 +39,7 @@ const getVelocity = (velocityHistory) => velocityHistory.reduce((acc, curr) => a
 
 export default function Landscape() {
 
-    const tileArr = [[]];
-
-    const waterLocations = [[1,1],[1,2],[5,3],[6,4],[0,6],[3,7],[5,8],[2,1],[2,2],[6,3],[7,4],[1,6],[4,7],[6,8],[8,4],[2,6],[5,7],[4,6],[7,7],[3,8],[6,7],[8,7]];
-    
-    for(let i = 0; i < 9; i++) {
-        tileArr[i] = [];
-        for(let j = 0; j < 9; j++) {
-            waterLocations.find(([row, col]) => row === i && col === j) ? tileArr[i][j] = TILE_TYPES.WATER : tileArr[i][j] = TILE_TYPES.GRASS;
-        }
-    }
-
-    const tileArrWithOffsets = tileArr.map((row, rowIdx) => {
-        return row.map((tileType, colIdx) => {
-            return <Tile
-                tileType={tileType}
-                xOffsetPx={colIdx*TILE_WIDTH_PX/2 - (rowIdx*TILE_WIDTH_PX/2)}
-                yOffsetPx={(colIdx*20) + rowIdx*18}
-                key={rowIdx*BOARD_HEIGHT_TILES + colIdx} />
-        })
-    });
+    const tileArray = buildMap();
 
     const [yVelocityHistory, _setYVelocityHistory] = useRecoilState(yVelocityHistoryState);
     const [xVelocityHistory, _setXVelocityHistory] = useRecoilState(xVelocityHistoryState);
@@ -90,50 +72,67 @@ export default function Landscape() {
 
     let moveYIntervalId;
     let moveXIntervalId;
-    
-    const moveYHelper = (newYVelocity = 0) => {
-        setYVelocityHistory([...yVelocityHistoryRef.current, newYVelocity].slice(1, MAX_HISTORY_LENGTH+1));
-        setYPosition(yPositionRef.current + 5*getVelocity(yVelocityHistoryRef.current));
-    };
 
-    const moveXHelper = (newXVelocity = 0) => {
-        setXVelocityHistory([...xVelocityHistoryRef.current, newXVelocity].slice(1, MAX_HISTORY_LENGTH+1));
-        setXPosition(xPositionRef.current + 5*getVelocity(xVelocityHistoryRef.current));
-    };
-
-    const moveY = (newYVelocity = 0) => {
+    const moveY = (newVelocity) => {
         clearInterval(moveYIntervalId);
         moveYIntervalId = setInterval(() => {
-            moveYHelper(newYVelocity)
+            moveHelper({
+                newVelocity,
+                velocityHistoryRef: yVelocityHistoryRef,
+                setVelocityHistory: setYVelocityHistory,
+                positionRef: yPositionRef,
+                setPosition: setYPosition,
+            });
         }, INTERVAL_MS)
     };
 
-    const moveX = (newXVelocity = 0) => {
+    const moveX = (newVelocity) => {
         clearInterval(moveXIntervalId);
         moveXIntervalId = setInterval(() => {
-            moveXHelper(newXVelocity)
+            moveHelper({
+                newVelocity,
+                velocityHistoryRef: xVelocityHistoryRef,
+                setVelocityHistory: setXVelocityHistory,
+                positionRef: xPositionRef,
+                setPosition: setXPosition,
+            });
         }, INTERVAL_MS)
     };
 
+    const stopMoveX = () => {
+        stopMove({
+            intervalId: moveXIntervalId,
+            velocityHistoryRef: xVelocityHistoryRef,
+            setVelocityHistory: setXVelocityHistory,
+            positionRef: xPositionRef,
+            setPosition: setXPosition,
+        });
+    }
+
     const stopMoveY = () => {
-        clearInterval(moveYIntervalId);
+        stopMove({
+            intervalId: moveYIntervalId,
+            velocityHistoryRef: yVelocityHistoryRef,
+            setVelocityHistory: setYVelocityHistory,
+            positionRef: yPositionRef,
+            setPosition: setYPosition,
+        });
+    }
+
+    const stopMove = ({ intervalId, velocityHistoryRef, setVelocityHistory, positionRef, setPosition }) => {
+        clearInterval(intervalId);
         const stopMoveIntervalId = setInterval(() => {
-            moveYHelper(0);
-            if (getVelocity(yVelocityHistoryRef.current) === 0) {
+            moveHelper({ newVelocity: 0, velocityHistoryRef, setVelocityHistory, positionRef, setPosition });
+            if (getVelocity(velocityHistoryRef.current) === 0) {
                 clearInterval(stopMoveIntervalId);
             }
         }, INTERVAL_MS)
     }
 
-    const stopMoveX = () => {
-        clearInterval(moveXIntervalId);
-        const stopMoveIntervalId = setInterval(() => {
-            moveXHelper(0);
-            if (getVelocity(xVelocityHistoryRef.current) === 0) {
-                clearInterval(stopMoveIntervalId);
-            }
-        }, INTERVAL_MS)
-    }
+    const moveHelper = ({ newVelocity, velocityHistoryRef, setVelocityHistory, positionRef, setPosition }) => {
+        setVelocityHistory([...velocityHistoryRef.current, newVelocity].slice(1, MAX_HISTORY_LENGTH+1));
+        setPosition(positionRef.current + 5*getVelocity(velocityHistoryRef.current));
+    };
     
     const handleKeyDown = ({ key, repeat }) => {
         if (repeat) {
@@ -199,8 +198,7 @@ export default function Landscape() {
     return(
         <Background>
             <LandscapeWrapper offsetY={yPositionRef.current} offsetX={xPositionRef.current}>
-
-                {tileArrWithOffsets}
+                {tileArray}
             </LandscapeWrapper>
         </Background>
     );
