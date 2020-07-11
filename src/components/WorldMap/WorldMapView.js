@@ -7,7 +7,7 @@ import {
     BOARD_WIDTH_TILES,
 } from '../../constants';
 
-const buildMap = () => {
+const WorldMapView = () => {
     const tileArr = [[]];
 
     const waterLocations = [[1,1],[1,2],[5,3],[6,4],[0,6],[3,7],[5,8],[2,1],[2,2],[6,3],[7,4],[1,6],[4,7],[6,8],[8,4],[2,6],[5,7],[4,6],[7,7],[3,6],[6,7],[8,7]];
@@ -33,5 +33,5 @@ const buildMap = () => {
 }
 
 export {
-    buildMap as default
+    WorldMapView as default
 };

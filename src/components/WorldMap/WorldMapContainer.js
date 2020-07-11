@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import styled from 'styled-components';
-import { atom, useRecoilState, useRecoilValue, selector } from 'recoil'
+import { atom, useRecoilState } from 'recoil'
 
-import buildMap from './buildMap';
-import Tile, { TILE_TYPES } from '../Tile';
+import WorldMapView from './WorldMapView';
 import {
     BOARD_HEIGHT_TILES,
     BOARD_WIDTH_TILES,
@@ -196,13 +195,11 @@ export default function Landscape() {
         };
     }, []);
 
-    const tileArray = useMemo(() => buildMap(yPositionRef.current, xPositionRef.current), []);
-
     return(
         <Background>
-            <LandscapeWrapper offsetY={yPositionRef.current} offsetX={xPositionRef.current}>
-                {tileArray}
-            </LandscapeWrapper>
+            <Wrapper offsetY={yPositionRef.current} offsetX={xPositionRef.current}>
+                <WorldMapView />
+            </Wrapper>
         </Background>
     );
 }
@@ -215,7 +212,7 @@ const Background = styled.div`
     overflow: hidden;
 `;
 
-const LandscapeWrapper = styled.div.attrs(p => ({
+const Wrapper = styled.div.attrs(p => ({
     style: {
         transform: `
             translateX(-50%)

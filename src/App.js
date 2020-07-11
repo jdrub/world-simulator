@@ -1,12 +1,12 @@
 import React from 'react';
 
 import { RecoilRoot } from 'recoil';
-import Landscape from './components/Landscape';
+import WorldMap from './components/WorldMap';
 
 function App() {
   return (
     <RecoilRoot>
-        <Landscape />
+        <WorldMap />
     </RecoilRoot>
   );
 }
