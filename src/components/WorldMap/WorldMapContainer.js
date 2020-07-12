@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { atom, useRecoilState } from 'recoil'
 
@@ -11,6 +11,9 @@ import {
     TILE_TOP_SURFACE_HEIGHT_PX,
     TILE_Z_HEIGHT_PX,
     MOVEMENT_SPEED_FACTOR,
+    TILE_SIDE_LENGTH_PX,
+    VISIBLE_HEIGHT_TILES,
+    VISIBLE_WIDTH_TILES,
 } from '../../constants';
 
 const MAX_HISTORY_LENGTH = 3;
@@ -36,12 +39,24 @@ export const xOffsetState = atom({
     default: 0,
 });
 
+const positionState = atom({
+    key: 'positionState',
+    default: { row: 4, col: 15 },
+});
+
 const getVelocity = (velocityHistory) => velocityHistory.reduce((acc, curr) => acc + curr) / MAX_HISTORY_LENGTH;
 
 export default function Landscape() {
     const [yVelocityHistory, _setYVelocityHistory] = useRecoilState(yVelocityHistoryState);
     const [xVelocityHistory, _setXVelocityHistory] = useRecoilState(xVelocityHistoryState);
-    
+    const [position, _setPosition] = useRecoilState(positionState);
+
+    const positionRef = useRef(position);
+    const setPosition = (newPosition) => {
+        positionRef.current = newPosition;
+        _setPosition(newPosition);
+    }
+
     const yVelocityHistoryRef = useRef(yVelocityHistory);
     const setYVelocityHistory = (newYVelocityHistory) => {
         yVelocityHistoryRef.current = newYVelocityHistory;
@@ -80,6 +95,7 @@ export default function Landscape() {
                 setVelocityHistory: setYVelocityHistory,
                 offsetRef: yOffsetRef,
                 setOffset: setYOffset,
+                isXOffset: false,
             });
         }, INTERVAL_MS)
     };
@@ -93,6 +109,7 @@ export default function Landscape() {
                 setVelocityHistory: setXVelocityHistory,
                 offsetRef: xOffsetRef,
                 setOffset: setXOffset,
+                isXOffset: true,
             });
         }, INTERVAL_MS)
     };
@@ -131,9 +148,21 @@ export default function Landscape() {
         // }, INTERVAL_MS)
     }
 
-    const moveHelper = ({ newVelocity, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset }) => {
+    const moveHelper = ({ newVelocity, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset, isXOffset }) => {
         setVelocityHistory([...velocityHistoryRef.current, newVelocity].slice(1, MAX_HISTORY_LENGTH+1));
-        setOffset(offsetRef.current + MOVEMENT_SPEED_FACTOR*getVelocity(velocityHistoryRef.current));
+        
+        let newOffset = offsetRef.current + MOVEMENT_SPEED_FACTOR*getVelocity(velocityHistoryRef.current);
+
+        console.log('newOffset: ', newOffset);
+        console.log('pxToOffset({ xPx: TILE_SIDE_LENGTH_PX, yPx: 0 }).xOffset: ', pxToOffset({ xPx: TILE_SIDE_LENGTH_PX, yPx: 0 }).xOffset);
+        if (isXOffset && newOffset > pxToOffset({ xPx: TILE_SIDE_LENGTH_PX, yPx: 0 }).xOffset) {
+            console.log('here');
+            const newPosition = { col: Math.max(positionRef.current.col - 1, 0), row: positionRef.current.row };
+            setPosition(newPosition);
+            newOffset -= pxToOffset({ xPx: TILE_SIDE_LENGTH_PX, yPx: 0 }).xOffset;
+        }
+
+        setOffset(newOffset);
     };
     
     const handleKeyDown = ({ key, repeat }) => {
@@ -200,7 +229,7 @@ export default function Landscape() {
     return(
         <Background>
             <Wrapper offsetY={yOffset} offsetX={xOffset}>
-                <WorldMapView />
+                <WorldMapView position={positionRef.current} />
             </Wrapper>
         </Background>
     );
@@ -214,23 +243,39 @@ const Background = styled.div`
     overflow: hidden;
 `;
 
-const Wrapper = styled.div.attrs(p => ({
+export const offsetToPx = ({ xOffset, yOffset }) => {
+    return ({
+        xPx: xOffset + TILE_WIDTH_PX/TILE_HEIGHT_PX * yOffset * -1,
+        yPx:  yOffset + TILE_HEIGHT_PX/TILE_WIDTH_PX * xOffset,
+    })
+}
+
+export const pxToOffset = ({ xPx, yPx }) => {
+    return ({
+        xOffset: (xPx + yPx * TILE_WIDTH_PX/TILE_HEIGHT_PX)/ 2,
+        yOffset: yPx/2 - (xPx * TILE_HEIGHT_PX/TILE_WIDTH_PX)/2
+    });
+}
+
+const Wrapper = styled.div.attrs(p => {
+    const { xPx, yPx } = offsetToPx({ xOffset: p.offsetX, yOffset: p.offsetY });
+    return {
     style: {
         transform: `
             translateX(-50%)
             translateY(-50%)
-            translateX(${p.offsetX + TILE_WIDTH_PX/TILE_HEIGHT_PX * p.offsetY * -1}px)
-            translateY(${TILE_HEIGHT_PX/TILE_WIDTH_PX * p.offsetX + p.offsetY}px)
+            translateX(${xPx}px)
+            translateY(${yPx}px)
             `
     },
-  }))`
+  }})`
     position: relative;
 
     left: 50%;
     top: 50%;
 
-    width: ${TILE_WIDTH_PX * BOARD_WIDTH_TILES}px;
-    height: ${TILE_HEIGHT_PX * BOARD_HEIGHT_TILES + TILE_Z_HEIGHT_PX}px;
+    width: ${TILE_WIDTH_PX * VISIBLE_WIDTH_TILES}px;
+    height: ${TILE_HEIGHT_PX * VISIBLE_HEIGHT_TILES + TILE_Z_HEIGHT_PX}px;
 
     transition: transform 0.1s linear;
     backface-visibility: hidden; /* this prevents jumpy css transitions in firefox */

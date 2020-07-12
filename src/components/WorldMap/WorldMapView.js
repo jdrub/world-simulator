@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { atom, useRecoilState } from 'recoil';
 
-import { xOffsetState, yOffsetState } from './WorldMapContainer';
+import { xOffsetState, yOffsetState, offsetToPx, pxToOffset } from './WorldMapContainer';
 
 import Tile, { TILE_TYPES } from '../Tile';
 import {
@@ -12,12 +12,9 @@ import {
     VISIBLE_HEIGHT_TILES,
     VISIBLE_WIDTH_TILES,
     TILE_ISO_WIDTH_PX,
+    TILE_SIDE_LENGTH_PX,
 } from '../../constants';
 
-const positionState = atom({
-    key: 'positionState',
-    default: { row: 4, col: 4 },
-});
 
 const buildFullTileMap = () => {
     const tileArr = [[]];
@@ -35,22 +32,32 @@ const buildFullTileMap = () => {
 }
 
 
-const xOffsetToPx = (xOffset) => {
-    return (9.627 * xOffset)
-}
-
-const pxToXOffset = (px) => {
-    return px / 9.627;
-}
-
-const buildVisibleTileMap = ({ fullTileMap, position, setPosition, xOffset, yOffset, setXOffset, setYOffset }) => {
+const buildVisibleTileMap = ({ fullTileMap, position, xOffset, yOffset, setXOffset, setYOffset }) => {
     const visibleTileArr = [[]];
 
     // if x offset is > the width of a block (could be 3 blocks in the future if there are performance issues) then update position.col accordingly, and also update the x offset by the width of a few tiles.
 
-    // let currPosition = position;
+    // const { xPx: xOffsetPx, yPx: yOffsetPx } = offsetToPx({ xOffset, yOffset });
+    
+    
+    // // console.log('currPOsiti: ', newPosition);
 
-    // if (xOffset > pxToXOffset(TILE_ISO_WIDTH_PX)) {
+    // if (xOffsetPx > TILE_SIDE_LENGTH_PX) {
+    //     const newPosition = { col: Math.max(position.col - 1, 0), row: position.row };
+    //     setPosition(newPosition);
+    //     setXOffset(xOffset - pxToOffset(TILE_SIDE_LENGTH_PX));
+    //     currPosition = newPosition;
+    // }
+
+
+    // if(xOffsetPx > TILE_WIDTH_PX/2 && yOffsetPx > TILE_HEIGHT_PX / 2) {
+    //     const newPosition = { col: Math.max(position.col - 1, 0), row: position.row };
+    //     setPosition(newPosition);
+    //     setXOffset(0);
+    //     currPosition = newPosition;
+    // }
+
+    // if (offsetToPx({ xOffset }).x > pxToXOffset(TILE_ISO_WIDTH_PX)) {
     //     const newPosition = { col: Math.max(position.col-1, BOARD_WIDTH_TILES-1), row: position.row };
     //     setPosition(newPosition);
     //     setXOffset(xOffset - pxToXOffset(TILE_ISO_WIDTH_PX));
@@ -66,17 +73,17 @@ const buildVisibleTileMap = ({ fullTileMap, position, setPosition, xOffset, yOff
 
     
 
-    const currPosition = {
-        row: 4,
-        col: Math.floor(xOffsetToPx(xOffset)/TILE_ISO_WIDTH_PX) + 4,
-    };
+    // const currPosition = {
+    //     row: 4,
+    //     col: Math.floor(xOffsetToPx(xOffset)/TILE_ISO_WIDTH_PX) + 4,
+    // };
 
-    console.log('currPosition:', currPosition);
+    console.log('currPosition:', position);
 
-    let leftBound = Math.max(Math.floor(currPosition.col - VISIBLE_WIDTH_TILES/2), 0);
-    let rightBound = Math.min(Math.ceil(currPosition.col + VISIBLE_WIDTH_TILES/2), BOARD_WIDTH_TILES - 1);
-    let topBound = Math.max(Math.floor(currPosition.row - VISIBLE_HEIGHT_TILES/2), 0);
-    let bottomBound = Math.min(Math.ceil(currPosition.row + VISIBLE_HEIGHT_TILES/2), BOARD_WIDTH_TILES - 1);
+    let leftBound = Math.max(Math.floor(position.col - VISIBLE_WIDTH_TILES/2), 0);
+    let rightBound = Math.min(Math.ceil(position.col + VISIBLE_WIDTH_TILES/2), BOARD_WIDTH_TILES - 1);
+    let topBound = Math.max(Math.floor(position.row - VISIBLE_HEIGHT_TILES/2), 0);
+    let bottomBound = Math.min(Math.ceil(position.row + VISIBLE_HEIGHT_TILES/2), BOARD_WIDTH_TILES - 1);
 
     for(let row = topBound, i = 0; row <= bottomBound; row++, i++) {
         visibleTileArr[i] = [];
@@ -85,19 +92,19 @@ const buildVisibleTileMap = ({ fullTileMap, position, setPosition, xOffset, yOff
         }
     }
 
-    // return visibleTileArr;
-    return fullTileMap;
+    return visibleTileArr;
+    // return fullTileMap;
 }
 
-const WorldMapView = () => {
+const WorldMapView = ({ position }) => {
     const fullTileMap = useMemo(buildFullTileMap, []);
 
-    const [position, setPosition] = useRecoilState(positionState);
+    // const [position, setPosition] = useRecoilState(positionState);
     const [xOffset, setXOffset] = useRecoilState(xOffsetState);
     const [yOffset, setYOffset] = useRecoilState(yOffsetState);
 
-    console.log('xOffset: ', xOffset);
-    const visibleTileArr = buildVisibleTileMap({ fullTileMap, position, setPosition, xOffset, yOffset, setXOffset, setYOffset });
+
+    const visibleTileArr = buildVisibleTileMap({ fullTileMap, position, xOffset, yOffset, setXOffset, setYOffset });
 
     const tileArrWithOffsets = visibleTileArr.map((row, rowIdx) => {
         return row.map((tileType, colIdx) => {
