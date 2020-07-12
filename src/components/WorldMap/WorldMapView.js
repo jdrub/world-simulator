@@ -1,7 +1,4 @@
-import React, { useMemo, useRef } from 'react';
-import { atom, useRecoilState } from 'recoil';
-
-import { xOffsetState, yOffsetState, offsetToPx, pxToOffset } from './WorldMapContainer';
+import React, { useMemo } from 'react';
 import { DRBN } from './specialWaterLocations';
 
 import Tile, { TILE_TYPES } from '../Tile';
@@ -12,8 +9,6 @@ import {
     BOARD_WIDTH_TILES,
     VISIBLE_HEIGHT_TILES,
     VISIBLE_WIDTH_TILES,
-    TILE_ISO_WIDTH_PX,
-    TILE_SIDE_LENGTH_PX,
 } from '../../constants';
 
 
@@ -22,7 +17,7 @@ const buildFullTileMap = () => {
 
     const waterLocations = [
         // [1,1 + 10],[1,2 + 10],[5,3 + 10],[6,4 + 10],[0,6],[3,7 + 10],[5,8 + 10],[2,1 + 10],[2,2 + 10],[6,3 + 10],[7,4 + 10],[1,6 + 10],[4,7 + 10],[6,8 + 10],[8,4 + 10],[2,6 + 10],[5,7 + 10],[4,6 + 10],[7,7 + 10],[3,6 + 10],[6,7 + 10],[8,7 + 10]
-    ].concat(DRBN);
+    ].concat(DRBN).map(([row, col]) => [row + 10, col]);
 
     for(let i = 0; i < BOARD_HEIGHT_TILES; i++) {
         tileArr[i] = [];
@@ -35,7 +30,7 @@ const buildFullTileMap = () => {
 }
 
 
-const buildVisibleTileMap = ({ fullTileMap, position, xOffset, yOffset, setXOffset, setYOffset }) => {
+const buildVisibleTileMap = ({ fullTileMap, position }) => {
     const visibleTileArr = [[]];
 
     let leftBound = Math.max(Math.floor(position.col - VISIBLE_WIDTH_TILES/2), 0);
@@ -43,32 +38,20 @@ const buildVisibleTileMap = ({ fullTileMap, position, xOffset, yOffset, setXOffs
     let topBound = Math.max(Math.floor(position.row - VISIBLE_HEIGHT_TILES/2), 0);
     let bottomBound = Math.min(Math.ceil(position.row + VISIBLE_HEIGHT_TILES/2), BOARD_HEIGHT_TILES - 1);
 
-    console.log('leftBound: ', leftBound);
-    console.log('rightBound: ', rightBound);
-    console.log('topBound: ', topBound);
-    console.log('bottomBound: ', bottomBound);
-    console.log('fullTileMap: ', fullTileMap);
     for(let row = topBound, i = 0; row <= bottomBound; row++, i++) {
         visibleTileArr[i] = [];
         for(let col = leftBound, j = 0; col <= rightBound; col++, j++) {
-            if (!fullTileMap[row]) console.log('ROW: ', row);
             visibleTileArr[i][j] = fullTileMap[row][col];
         }
     }
 
     return visibleTileArr;
-    // return fullTileMap;
 }
 
 const WorldMapView = ({ position }) => {
     const fullTileMap = useMemo(buildFullTileMap, []);
 
-    // const [position, setPosition] = useRecoilState(positionState);
-    const [xOffset, setXOffset] = useRecoilState(xOffsetState);
-    const [yOffset, setYOffset] = useRecoilState(yOffsetState);
-
-
-    const visibleTileArr = buildVisibleTileMap({ fullTileMap, position, xOffset, yOffset, setXOffset, setYOffset });
+    const visibleTileArr = buildVisibleTileMap({ fullTileMap, position });
 
     const tileArrWithOffsets = visibleTileArr.map((row, rowIdx) => {
         return row.map((tileType, colIdx) => {

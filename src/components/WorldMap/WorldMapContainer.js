@@ -6,12 +6,11 @@ import WorldMapView from './WorldMapView';
 import {
     BOARD_HEIGHT_TILES,
     BOARD_WIDTH_TILES,
-    TILE_WIDTH_PX,
-    TILE_HEIGHT_PX,
-    TILE_TOP_SURFACE_HEIGHT_PX,
-    TILE_Z_HEIGHT_PX,
     MOVEMENT_SPEED_FACTOR,
+    TILE_HEIGHT_PX,
     TILE_SIDE_LENGTH_PX,
+    TILE_WIDTH_PX,
+    TILE_Z_HEIGHT_PX,
     VISIBLE_HEIGHT_TILES,
     VISIBLE_WIDTH_TILES,
 } from '../../constants';
@@ -41,7 +40,7 @@ export const xOffsetState = atom({
 
 const positionState = atom({
     key: 'positionState',
-    default: { row: 4, col: 29 },
+    default: { row: 10, col: 15 },
 });
 
 const getVelocity = (velocityHistory) => velocityHistory.reduce((acc, curr) => acc + curr) / MAX_HISTORY_LENGTH;
@@ -137,29 +136,43 @@ export default function Landscape() {
     const stopMove = ({ intervalId, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset }) => {
         clearInterval(intervalId);
 
-        // setVelocityHistory(new Array(MAX_HISTORY_LENGTH).fill(0));
-        // comment the above and uncomment the following to have a momentum-stop effect
+        setVelocityHistory(new Array(MAX_HISTORY_LENGTH).fill(0));
+        // ucomment the above and comment the following to remove a momentum-stop effect
 
-        const stopMoveIntervalId = setInterval(() => {
-            moveHelper({ newVelocity: 0, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset });
-            if (getVelocity(velocityHistoryRef.current) === 0) {
-                clearInterval(stopMoveIntervalId);
-            }
-        }, INTERVAL_MS)
+        // const stopMoveIntervalId = setInterval(() => {
+        //     moveHelper({ newVelocity: 0, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset });
+        //     if (getVelocity(velocityHistoryRef.current) === 0) {
+        //         clearInterval(stopMoveIntervalId);
+        //     }
+        // }, INTERVAL_MS)
     }
 
-    // console.log('onOffset: ', pxToOffset({ xPx: TILE_SIDE_LENGTH_PX, yPx: 0 }).xOffset);
     const moveHelper = ({ newVelocity, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset, isXOffset }) => {
         setVelocityHistory([...velocityHistoryRef.current, newVelocity].slice(1, MAX_HISTORY_LENGTH+1));
         
         let newOffset = offsetRef.current + MOVEMENT_SPEED_FACTOR*getVelocity(velocityHistoryRef.current);
 
-        if (isXOffset && newOffset > pxToOffset({ xPx: TILE_SIDE_LENGTH_PX, yPx: 0 }).xOffset) {
-            console.log('oldOffset: ', newOffset);
+        console.log(isXOffset ? 'x' : 'y', 'offset difference: ', Math.abs(newOffset - offsetRef.current));
+
+        const tileSideLengthXOffset = pxToOffset({ xPx: TILE_SIDE_LENGTH_PX, yPx: 0 }).xOffset;
+        const tileSideLengthYOffset = pxToOffset({ xPx: 0, yPx: TILE_SIDE_LENGTH_PX }).yOffset;
+
+        if (isXOffset && newOffset > tileSideLengthXOffset) {
             const newPosition = { col: Math.max(positionRef.current.col - 1, 0), row: positionRef.current.row };
             setPosition(newPosition);
-            newOffset -= pxToOffset({ xPx: TILE_SIDE_LENGTH_PX, yPx: 0 }).xOffset + 20;
-            console.log('newOffset: ', newOffset);
+            newOffset -= tileSideLengthXOffset + 20;
+        } else if (isXOffset && newOffset < -1 * tileSideLengthXOffset ) {
+            const newPosition = { col: Math.min(positionRef.current.col + 1, BOARD_WIDTH_TILES - 1), row: positionRef.current.row };
+            setPosition(newPosition);
+            newOffset += tileSideLengthXOffset + 20;
+        } else if (!isXOffset && newOffset > tileSideLengthYOffset) {
+            const newPosition = { row: Math.max(positionRef.current.row - 1, 0), col: positionRef.current.col };
+            setPosition(newPosition);
+            newOffset -= tileSideLengthYOffset + 2.5;
+        } else if (!isXOffset && newOffset < -1 * tileSideLengthYOffset) {
+            const newPosition = { row: Math.min(positionRef.current.row + 1, BOARD_HEIGHT_TILES), col: positionRef.current.col };
+            setPosition(newPosition);
+            newOffset += tileSideLengthYOffset + 2.5;
         }
 
         setOffset(newOffset);
@@ -194,8 +207,9 @@ export default function Landscape() {
                 break;
         }
 
-        newXVelocity && moveX(newXVelocity);
+        
         newYVelocity && moveY(newYVelocity);
+        newXVelocity && moveX(newXVelocity);
     }
 
     const handleKeyUp = ({ key }) => {
@@ -228,7 +242,7 @@ export default function Landscape() {
 
     return(
         <Background>
-            <Wrapper offsetY={yOffset} offsetX={xOffset}>
+            <Wrapper yOffset={yOffset} xOffset={xOffset}>
                 <WorldMapView position={positionRef.current} />
             </Wrapper>
         </Background>
@@ -257,15 +271,15 @@ export const pxToOffset = ({ xPx, yPx }) => {
     });
 }
 
-const Wrapper = styled.div.attrs(p => {
-    const { xPx, yPx } = offsetToPx({ xOffset: p.offsetX, yOffset: p.offsetY });
+const Wrapper = styled.div.attrs(({ xOffset, yOffset })=> {
+    const { xPx, yPx } = offsetToPx({ xOffset, yOffset });
     return {
     style: {
         transform: `
-            translateX(-50%)
             translateY(-50%)
-            translateX(${xPx}px)
+            translateX(-50%)
             translateY(${yPx}px)
+            translateX(${xPx}px)
             `
     },
   }})`
@@ -277,6 +291,6 @@ const Wrapper = styled.div.attrs(p => {
     width: ${TILE_WIDTH_PX * VISIBLE_WIDTH_TILES}px;
     height: ${TILE_HEIGHT_PX * VISIBLE_HEIGHT_TILES + TILE_Z_HEIGHT_PX}px;
 
-    /* transition: transform 0.1s linear; */
-    backface-visibility: hidden; /* this prevents jumpy css transitions in firefox */
+    /* transition: transform ${INTERVAL_MS / 1000}s linear; */
+    backface-visibility: hidden; /* this prevents jumpy css transitions in firefox */ 
   `;

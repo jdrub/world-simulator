@@ -2,7 +2,6 @@ import React from 'react';
 import styled from 'styled-components';
 
 import { grassTile, waterTile } from '../images';
-// import getRandomInt from '../utils/getRandomInt';
 import { TILE_WIDTH_PX } from '../constants';
 
 export const TILE_TYPES = {
@@ -25,7 +24,7 @@ export default ({ tileType, xOffsetPx, yOffsetPx }) => {
 const Tile = styled.img`
     width: ${TILE_WIDTH_PX}px;
     position: absolute;
-    left: calc(${p => p.xOffsetPx}px + 50%);
-    top: ${p => p.yOffsetPx}px;
-    transform: translateX(-50%);
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%) translateX(${p => p.xOffsetPx}px) translateY(${p => p.yOffsetPx}px);
 `;
