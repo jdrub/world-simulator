@@ -124,7 +124,6 @@ const WorldMapView = ({ position }) => {
 
     const { leftEdgeTileMask, rightEdgeTileMask, cornerEdgeTileMask } = buildEdgeTileMask(visibleTileArr);
 
-    console.log('position: ', position);
     return (
         <>
             <OffsetWrapper position={position}>
@@ -150,8 +149,6 @@ const getOffsetPx = ({ row, col }) => {
 
 const OffsetWrapper = styled.div.attrs(({ position }) => {
     const { xOffsetPx, yOffsetPx } = getOffsetPx({ row: position.row % 1, col: position.col % 1 });
-    console.log('xOffsetPx: ', xOffsetPx);
-    console.log('yOffsetPx: ', yOffsetPx);
 
     const { xOffsetPx: xConstOffsetPx, yOffsetPx: yConstOffsetPx } = getOffsetPx({ row: 1, col: 1 });
     return {

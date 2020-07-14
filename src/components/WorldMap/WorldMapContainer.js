@@ -160,7 +160,10 @@ const Wrapper = styled.div`
     transform: translateY(-50%) translateX(-50%);
 
     width: ${TILE_WIDTH_PX * VISIBLE_WIDTH_TILES}px;
-    height: ${TILE_HEIGHT_PX * VISIBLE_HEIGHT_TILES + TILE_Z_HEIGHT_PX}px;
+    height: ${TILE_HEIGHT_PX * (VISIBLE_HEIGHT_TILES + 1) + TILE_Z_HEIGHT_PX}px;
+
+    /* this clip-path only works when the visible area is square */
+    clip-path: polygon(50% 56px, 100% 53.25%, 100% 55.79%, 50.10% 99.54%, 0px 55.79%, 0px 53.25%);
 
     backface-visibility: hidden; /* this prevents jumpy css transitions in firefox */ 
   `;
