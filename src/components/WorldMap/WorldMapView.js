@@ -1,16 +1,17 @@
 import React, { useMemo } from 'react';
 import { DRBN } from './specialWaterLocations';
+import styled from 'styled-components';
 
 import Tile, { TILE_TYPES } from '../Tile';
 import {
-    TILE_WIDTH_PX,
-    TILE_HEIGHT_PX,
     BOARD_HEIGHT_TILES,
     BOARD_WIDTH_TILES,
+    TILE_HEIGHT_PX,
+    TILE_SIDE_LENGTH_PX,
+    TILE_WIDTH_PX,
     VISIBLE_HEIGHT_TILES,
     VISIBLE_WIDTH_TILES,
 } from '../../constants';
-
 
 const buildFullTileMap = () => {
     const tileArr = [[]];
@@ -33,10 +34,13 @@ const buildFullTileMap = () => {
 const buildVisibleTileMap = ({ fullTileMap, position }) => {
     const visibleTileArr = [[]];
 
-    let leftBound = Math.max(Math.floor(position.col - VISIBLE_WIDTH_TILES/2), 0);
-    let rightBound = Math.min(Math.ceil(position.col + VISIBLE_WIDTH_TILES/2), BOARD_WIDTH_TILES - 1);
-    let topBound = Math.max(Math.floor(position.row - VISIBLE_HEIGHT_TILES/2), 0);
-    let bottomBound = Math.min(Math.ceil(position.row + VISIBLE_HEIGHT_TILES/2), BOARD_HEIGHT_TILES - 1);
+    const rowInt = Math.floor(position.row);
+    const colInt = Math.floor(position.col);
+
+    let leftBound = Math.max(Math.floor(colInt - VISIBLE_WIDTH_TILES/2), 0);
+    let rightBound = Math.min(Math.ceil(colInt + VISIBLE_WIDTH_TILES/2), BOARD_WIDTH_TILES - 1);
+    let topBound = Math.max(Math.floor(rowInt - VISIBLE_HEIGHT_TILES/2), 0);
+    let bottomBound = Math.min(Math.ceil(rowInt + VISIBLE_HEIGHT_TILES/2), BOARD_HEIGHT_TILES - 1);
 
     for(let row = topBound, i = 0; row <= bottomBound; row++, i++) {
         visibleTileArr[i] = [];
@@ -55,16 +59,39 @@ const WorldMapView = ({ position }) => {
 
     const tileArrWithOffsets = visibleTileArr.map((row, rowIdx) => {
         return row.map((tileType, colIdx) => {
+            const { xOffsetPx, yOffsetPx } = getOffsetPx({ row: rowIdx, col: colIdx });
+
             return <Tile
                 tileType={tileType}
-                xOffsetPx={colIdx*TILE_WIDTH_PX/2 - (rowIdx*TILE_WIDTH_PX/2)}
-                yOffsetPx={(colIdx*TILE_HEIGHT_PX/2) + (rowIdx*TILE_HEIGHT_PX/2)}
+                xOffsetPx={xOffsetPx}
+                yOffsetPx={yOffsetPx}
                 key={rowIdx*BOARD_HEIGHT_TILES + colIdx} />
         })
     });
 
-    return tileArrWithOffsets;
+    return (
+        <OffsetWrapper position={position}>
+            {tileArrWithOffsets}
+        </OffsetWrapper>
+    );
 }
+
+const getOffsetPx = ({ row, col }) => {
+    return ({
+        xOffsetPx: col*TILE_WIDTH_PX/2 - (row*TILE_WIDTH_PX/2),
+        yOffsetPx: (col*TILE_HEIGHT_PX/2) + (row*TILE_HEIGHT_PX/2),
+    });
+};
+
+const OffsetWrapper = styled.div.attrs(({ position }) => {
+    const { xOffsetPx, yOffsetPx } = getOffsetPx({ row: position.row % 1, col: position.col % 1 });
+
+    return {
+        style: {
+            transform: `translateX(${-1*xOffsetPx}px) translateY(${-1*yOffsetPx}px)`
+        }
+    }
+})``;
 
 export {
     WorldMapView as default
