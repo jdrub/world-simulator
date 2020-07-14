@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import styled from 'styled-components';
+import React, { useEffect, useRef } from 'react';
+import styled, { createGlobalStyle } from 'styled-components';
 import { atom, useRecoilState } from 'recoil'
 
 import WorldMapView from './WorldMapView';
@@ -141,6 +141,7 @@ export default function Landscape() {
             <Wrapper>
                 <WorldMapView position={positionRef.current} />
             </Wrapper>
+            <HideBodyOverflow />
         </Background>
     );
 }
@@ -167,3 +168,9 @@ const Wrapper = styled.div`
 
     backface-visibility: hidden; /* this prevents jumpy css transitions in firefox */ 
   `;
+
+const HideBodyOverflow = createGlobalStyle`
+    body {
+        overflow: hidden;
+    }
+`

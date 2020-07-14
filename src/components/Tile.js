@@ -17,24 +17,27 @@ export const TILE_TYPES = {
 
 export default ({ tileType, xOffsetPx, yOffsetPx }) => {
     let imgSrc;
+    let zIndex = 0;
+
     switch(tileType) {
         case(TILE_TYPES.WATER): imgSrc = waterTile; break;
         case(TILE_TYPES.GRASS): imgSrc = grassTile; break;
-        case(TILE_TYPES.GRASS_RIGHT_EDGE): imgSrc = grassTileRightEdge; break;
-        case(TILE_TYPES.GRASS_LEFT_EDGE): imgSrc = grassTileLeftEdge; break;
-        case(TILE_TYPES.GRASS_CORNER_EDGE): imgSrc = grassTileCornerEdge; break;
-        case(TILE_TYPES.WATER_RIGHT_EDGE): imgSrc = waterTileRightEdge; break;
-        case(TILE_TYPES.WATER_LEFT_EDGE): imgSrc = waterTileLeftEdge; break;
-        case(TILE_TYPES.WATER_CORNER_EDGE): imgSrc = waterTileCornerEdge; break;
+        case(TILE_TYPES.GRASS_RIGHT_EDGE): imgSrc = grassTileRightEdge; zIndex = 2; break;
+        case(TILE_TYPES.GRASS_LEFT_EDGE): imgSrc = grassTileLeftEdge; zIndex = 2; break;
+        case(TILE_TYPES.GRASS_CORNER_EDGE): imgSrc = grassTileCornerEdge; zIndex = 1; break;
+        case(TILE_TYPES.WATER_RIGHT_EDGE): imgSrc = waterTileRightEdge; zIndex = 2; break;
+        case(TILE_TYPES.WATER_LEFT_EDGE): imgSrc = waterTileLeftEdge; zIndex = 2; break;
+        case(TILE_TYPES.WATER_CORNER_EDGE): imgSrc = waterTileCornerEdge; zIndex = 1; break;
         default: throw new Error('invalid tile type');
     }
 
-    return <Tile src={imgSrc} xOffsetPx={xOffsetPx} yOffsetPx={yOffsetPx} />
+    return <Tile src={imgSrc} xOffsetPx={xOffsetPx} yOffsetPx={yOffsetPx} zIndex={zIndex} />
 }
 
 
 const Tile = styled.img`
     width: ${TILE_WIDTH_PX}px;
+    z-index: ${p => p.zIndex};
     position: absolute;
     left: 50%;
     top: 0;
