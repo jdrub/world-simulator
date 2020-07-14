@@ -15,18 +15,7 @@ import {
     VISIBLE_WIDTH_TILES,
 } from '../../constants';
 
-const MAX_HISTORY_LENGTH = 3;
-const INTERVAL_MS = 100;
-
-const yVelocityHistoryState = atom({
-    key: 'yVelocityHistoryState',
-    default: new Array(MAX_HISTORY_LENGTH).fill(0),
-});
-
-const xVelocityHistoryState = atom({
-    key: 'xVelocityHistoryState',
-    default: new Array(MAX_HISTORY_LENGTH).fill(0),
-});
+const INTERVAL_MS = 5;
 
 export const yOffsetState = atom({
     key: 'yOffsetState',
@@ -43,29 +32,13 @@ const positionState = atom({
     default: { row: 10, col: 15 },
 });
 
-const getVelocity = (velocityHistory) => velocityHistory.reduce((acc, curr) => acc + curr) / MAX_HISTORY_LENGTH;
-
 export default function Landscape() {
-    const [yVelocityHistory, _setYVelocityHistory] = useRecoilState(yVelocityHistoryState);
-    const [xVelocityHistory, _setXVelocityHistory] = useRecoilState(xVelocityHistoryState);
     const [position, _setPosition] = useRecoilState(positionState);
 
     const positionRef = useRef(position);
     const setPosition = (newPosition) => {
         positionRef.current = newPosition;
         _setPosition(newPosition);
-    }
-
-    const yVelocityHistoryRef = useRef(yVelocityHistory);
-    const setYVelocityHistory = (newYVelocityHistory) => {
-        yVelocityHistoryRef.current = newYVelocityHistory;
-        _setYVelocityHistory(yVelocityHistory);
-    }
-
-    const xVelocityHistoryRef = useRef(xVelocityHistory);
-    const setXVelocityHistory = (newXVelocityHistory) => {
-        xVelocityHistoryRef.current = newXVelocityHistory;
-        _setXVelocityHistory(xVelocityHistory);
     }
 
     const [yOffset, _setYOffset] = useRecoilState(yOffsetState);
@@ -90,8 +63,6 @@ export default function Landscape() {
         moveYIntervalId = setInterval(() => {
             moveHelper({
                 newVelocity,
-                velocityHistoryRef: yVelocityHistoryRef,
-                setVelocityHistory: setYVelocityHistory,
                 offsetRef: yOffsetRef,
                 setOffset: setYOffset,
                 isXOffset: false,
@@ -104,8 +75,6 @@ export default function Landscape() {
         moveXIntervalId = setInterval(() => {
             moveHelper({
                 newVelocity,
-                velocityHistoryRef: xVelocityHistoryRef,
-                setVelocityHistory: setXVelocityHistory,
                 offsetRef: xOffsetRef,
                 setOffset: setXOffset,
                 isXOffset: true,
@@ -114,45 +83,15 @@ export default function Landscape() {
     };
 
     const stopMoveX = () => {
-        stopMove({
-            intervalId: moveXIntervalId,
-            velocityHistoryRef: xVelocityHistoryRef,
-            setVelocityHistory: setXVelocityHistory,
-            offsetRef: xOffsetRef,
-            setOffset: setXOffset,
-        });
+        clearInterval(moveXIntervalId);
     }
 
     const stopMoveY = () => {
-        stopMove({
-            intervalId: moveYIntervalId,
-            velocityHistoryRef: yVelocityHistoryRef,
-            setVelocityHistory: setYVelocityHistory,
-            offsetRef: yOffsetRef,
-            setOffset: setYOffset,
-        });
+        clearInterval(moveYIntervalId);
     }
 
-    const stopMove = ({ intervalId, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset }) => {
-        clearInterval(intervalId);
-
-        setVelocityHistory(new Array(MAX_HISTORY_LENGTH).fill(0));
-        // ucomment the above and comment the following to remove a momentum-stop effect
-
-        // const stopMoveIntervalId = setInterval(() => {
-        //     moveHelper({ newVelocity: 0, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset });
-        //     if (getVelocity(velocityHistoryRef.current) === 0) {
-        //         clearInterval(stopMoveIntervalId);
-        //     }
-        // }, INTERVAL_MS)
-    }
-
-    const moveHelper = ({ newVelocity, velocityHistoryRef, setVelocityHistory, offsetRef, setOffset, isXOffset }) => {
-        setVelocityHistory([...velocityHistoryRef.current, newVelocity].slice(1, MAX_HISTORY_LENGTH+1));
-        
-        let newOffset = offsetRef.current + MOVEMENT_SPEED_FACTOR*getVelocity(velocityHistoryRef.current);
-
-        console.log(isXOffset ? 'x' : 'y', 'offset difference: ', Math.abs(newOffset - offsetRef.current));
+    const moveHelper = ({ newVelocity, offsetRef, setOffset, isXOffset }) => {
+        let newOffset = offsetRef.current + MOVEMENT_SPEED_FACTOR*newVelocity;
 
         const tileSideLengthXOffset = pxToOffset({ xPx: TILE_SIDE_LENGTH_PX, yPx: 0 }).xOffset;
         const tileSideLengthYOffset = pxToOffset({ xPx: 0, yPx: TILE_SIDE_LENGTH_PX }).yOffset;
