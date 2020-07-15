@@ -1,5 +1,4 @@
-import React, { useMemo } from 'react';
-import { DRBN } from './specialWaterLocations';
+import React from 'react';
 import styled from 'styled-components';
 
 import Tile, { TILE_TYPES } from '../Tile';
@@ -12,27 +11,12 @@ import {
     VISIBLE_WIDTH_TILES,
 } from '../../constants';
 
-const getEdgeTile = ({ tileType, isRightEdge, isCornerEdge }) => {
+
+
+const getEdgeTileType = ({ tileType, isRightEdge, isCornerEdge }) => {
     return tileType === TILE_TYPES.WATER
         ? isRightEdge ? TILE_TYPES.WATER_RIGHT_EDGE : isCornerEdge ? TILE_TYPES.WATER_CORNER_EDGE : TILE_TYPES.WATER_LEFT_EDGE
         : isRightEdge ? TILE_TYPES.GRASS_RIGHT_EDGE : isCornerEdge ? TILE_TYPES.GRASS_CORNER_EDGE : TILE_TYPES.GRASS_LEFT_EDGE;
-}
-
-const buildFullTileMap = () => {
-    const tileArr = [[]];
-
-    const waterLocations = [
-        // [1,1 + 10],[1,2 + 10],[5,3 + 10],[6,4 + 10],[0,6],[3,7 + 10],[5,8 + 10],[2,1 + 10],[2,2 + 10],[6,3 + 10],[7,4 + 10],[1,6 + 10],[4,7 + 10],[6,8 + 10],[8,4 + 10],[2,6 + 10],[5,7 + 10],[4,6 + 10],[7,7 + 10],[3,6 + 10],[6,7 + 10],[8,7 + 10]
-    ].concat(DRBN).map(([row, col]) => [row + 10, col]);
-
-    for(let i = 0; i < BOARD_HEIGHT_TILES; i++) {
-        tileArr[i] = [];
-        for(let j = 0; j < BOARD_WIDTH_TILES; j++) {
-            waterLocations.find(([row, col]) => row === i && col === j) ? tileArr[i][j] = TILE_TYPES.WATER : tileArr[i][j] = TILE_TYPES.GRASS;
-        }
-    }
-
-    return tileArr;
 }
 
 const buildEdgeTileMask = (visibleTileArr) => {
@@ -52,7 +36,7 @@ const buildEdgeTileMask = (visibleTileArr) => {
 
         leftEdgeTileMask[i] = (
             <Tile
-                tileType={getEdgeTile({ tileType: visibleTileArr[visibleTileArr.length-1][i], isRightEdge: false })}
+                tileType={getEdgeTileType({ tileType: visibleTileArr[visibleTileArr.length-1][i], isRightEdge: false })}
                 xOffsetPx={leftEdgeXOffsetPx}
                 yOffsetPx={leftEdgeYOffsetPx}
                 key={(visibleTileArr.length-1)*BOARD_HEIGHT_TILES + i + 1} />
@@ -60,7 +44,7 @@ const buildEdgeTileMask = (visibleTileArr) => {
 
         rightEdgeTileMask[i] = (
             <Tile
-                tileType={getEdgeTile({ tileType: visibleTileArr[i][visibleTileArr.length - 1], isRightEdge: true })}
+                tileType={getEdgeTileType({ tileType: visibleTileArr[i][visibleTileArr.length - 1], isRightEdge: true })}
                 xOffsetPx={rightEdgeXOffsetPx}
                 yOffsetPx={rightEdgeYOffsetPx}
                 key={(visibleTileArr.length-1)*BOARD_HEIGHT_TILES + i + 1} />
@@ -74,7 +58,7 @@ const buildEdgeTileMask = (visibleTileArr) => {
 
     const cornerEdgeTileMask = (
         <Tile
-            tileType={getEdgeTile({ tileType: visibleTileArr[visibleTileArr.length - 1][visibleTileArr.length - 1], isCornerEdge: true })}
+            tileType={getEdgeTileType({ tileType: visibleTileArr[visibleTileArr.length - 1][visibleTileArr.length - 1], isCornerEdge: true })}
             xOffsetPx={cornerEdgeXOffsetPx}
             yOffsetPx={cornerEdgeYOffsetPx}
             key={(visibleTileArr.length-1)*BOARD_HEIGHT_TILES + visibleTileArr.length-1 + 2} />
@@ -83,16 +67,21 @@ const buildEdgeTileMask = (visibleTileArr) => {
     return ({ leftEdgeTileMask, rightEdgeTileMask, cornerEdgeTileMask });
 }
 
-const buildVisibleTileMap = ({ fullTileMap, position }) => {
-    const visibleTileArr = [[]];
-
+const getVisibleTileMapBounds = ({ position }) => {
     const rowInt = Math.floor(position.row);
     const colInt = Math.floor(position.col);
 
-    let leftBound = Math.max(Math.floor(colInt - VISIBLE_WIDTH_TILES/2), 0);
-    let rightBound = Math.min(Math.ceil(colInt + VISIBLE_WIDTH_TILES/2), BOARD_WIDTH_TILES - 1);
-    let topBound = Math.max(Math.floor(rowInt - VISIBLE_HEIGHT_TILES/2), 0);
-    let bottomBound = Math.min(Math.ceil(rowInt + VISIBLE_HEIGHT_TILES/2), BOARD_HEIGHT_TILES - 1);
+    const leftBound = Math.max(Math.floor(colInt - VISIBLE_WIDTH_TILES/2), 0);
+    const rightBound = Math.min(Math.ceil(colInt + VISIBLE_WIDTH_TILES/2), BOARD_WIDTH_TILES - 1);
+    const topBound = Math.max(Math.floor(rowInt - VISIBLE_HEIGHT_TILES/2), 0);
+    const bottomBound = Math.min(Math.ceil(rowInt + VISIBLE_HEIGHT_TILES/2), BOARD_HEIGHT_TILES - 1);
+
+    return ({ leftBound, rightBound, topBound, bottomBound });
+}
+const buildVisibleTileMap = ({ fullTileMap, position }) => {
+    const visibleTileArr = [[]];
+
+    const { leftBound, rightBound, topBound, bottomBound } = getVisibleTileMapBounds({ position });
 
     for(let row = topBound, i = 0; row <= bottomBound; row++, i++) {
         visibleTileArr[i] = [];
@@ -104,9 +93,17 @@ const buildVisibleTileMap = ({ fullTileMap, position }) => {
     return visibleTileArr;
 }
 
-const WorldMapView = ({ position }) => {
-    const fullTileMap = useMemo(buildFullTileMap, []);
+const getAbsolutePosition = ({ visibleRow, visibleCol, position }) => {
+    const { leftBound, topBound } = getVisibleTileMapBounds({ position });
+    return ({ row: topBound + visibleRow, col: leftBound + visibleCol });
+}
 
+const handleClick = ({ tileType, visibleRow, visibleCol, updateTile, position, fullTileMap }) => {
+    const absolutePosition = getAbsolutePosition({ visibleRow, visibleCol, position });
+    updateTile({ row: absolutePosition.row, col: absolutePosition.col, tileType });
+}
+
+const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     const visibleTileArr = buildVisibleTileMap({ fullTileMap, position });
 
     const tileArrWithOffsets = visibleTileArr.map((row, rowIdx) => {
@@ -117,7 +114,9 @@ const WorldMapView = ({ position }) => {
                 tileType={tileType}
                 xOffsetPx={xOffsetPx}
                 yOffsetPx={yOffsetPx}
-                key={rowIdx*BOARD_HEIGHT_TILES + colIdx} />
+                key={rowIdx*BOARD_HEIGHT_TILES + colIdx}
+                onClick={(tileType) => handleClick({ tileType, visibleRow: rowIdx, visibleCol: colIdx, updateTile, position, fullTileMap })}
+                />
         })
     });
 

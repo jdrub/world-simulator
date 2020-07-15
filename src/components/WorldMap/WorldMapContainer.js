@@ -1,8 +1,13 @@
 import React, { useEffect, useRef } from 'react';
-import styled, { createGlobalStyle } from 'styled-components';
 import { atom, useRecoilState } from 'recoil'
+import styled, { createGlobalStyle } from 'styled-components';
 
+import { TILE_TYPES } from '../Tile';
+import Button from '../Button';
+import CssReset from '../CssReset';
+import waterLocations from './waterLocations';
 import WorldMapView from './WorldMapView';
+
 import {
     INTERVAL_MS,
     START_COL,
@@ -13,6 +18,8 @@ import {
     TILE_Z_HEIGHT_PX,
     VISIBLE_HEIGHT_TILES,
     VISIBLE_WIDTH_TILES,
+    BOARD_WIDTH_TILES,
+    BOARD_HEIGHT_TILES,
 } from '../../constants';
 
 const positionState = atom({
@@ -20,7 +27,26 @@ const positionState = atom({
     default: { row: START_ROW, col: START_COL },
 });
 
+const tileMapState = atom({
+    key: 'tileMapState',
+    default: buildFullTileMap(),
+});
+
+function buildFullTileMap() {
+    const tileArr = [[]];
+
+    for(let i = 0; i < BOARD_HEIGHT_TILES; i++) {
+        tileArr[i] = [];
+        for(let j = 0; j < BOARD_WIDTH_TILES; j++) {
+            waterLocations.find(([row, col]) => row === i && col === j) ? tileArr[i][j] = TILE_TYPES.WATER : tileArr[i][j] = TILE_TYPES.GRASS;
+        }
+    }
+
+    return tileArr;
+}
+
 export default function Landscape() {
+    const [fullTileMap, setFullTileMap] = useRecoilState(tileMapState);
     const [position, _setPosition] = useRecoilState(positionState);
 
     const positionRef = useRef(position);
@@ -136,13 +162,45 @@ export default function Landscape() {
         };
     }, []);
 
+    const handleUpdateTile = ({ row, col, tileType }) => {
+        const newFullTileMap = [];
+        for(let i = 0; i < fullTileMap.length; i++) {
+            newFullTileMap[i] = [...fullTileMap[i]];
+        }
+
+        newFullTileMap[row][col] = tileType;
+        setFullTileMap(newFullTileMap);
+    }
+
+    const handleExportClick = () => {
+        // console.log(JSON.stringify(fullTileMap));
+        // get water locations
+        const waterLocations = [];
+        for(let row = 0; row < fullTileMap.length; row++) {
+            for(let col = 0; col < fullTileMap[0].length; col++) {
+                if (fullTileMap[row][col] === TILE_TYPES.WATER) {
+                    waterLocations.push([row, col]);
+                }
+            }
+        }
+
+        console.log(JSON.stringify(waterLocations));
+    }
+
     return(
-        <Background>
-            <Wrapper>
-                <WorldMapView position={positionRef.current} />
-            </Wrapper>
-            <HideBodyOverflow />
-        </Background>
+        <>
+            <CssReset />
+            <Background>
+                <Button onClick={() => handleExportClick()}>Export</Button>
+                <Wrapper>
+                    <WorldMapView
+                        position={positionRef.current}
+                        fullTileMap={fullTileMap}
+                        updateTile={(params) => handleUpdateTile(params)} />
+                </Wrapper>
+                <HideBodyOverflow />
+            </Background>
+        </>
     );
 }
 
