@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { atom, useRecoilState } from 'recoil'
 import styled, { createGlobalStyle } from 'styled-components';
 
@@ -22,11 +22,6 @@ import {
     BOARD_HEIGHT_TILES,
 } from '../../constants';
 
-const positionState = atom({
-    key: 'positionState',
-    default: { row: START_ROW, col: START_COL },
-});
-
 const tileMapState = atom({
     key: 'tileMapState',
     default: buildFullTileMap(),
@@ -47,7 +42,7 @@ function buildFullTileMap() {
 
 export default function Landscape() {
     const [fullTileMap, setFullTileMap] = useRecoilState(tileMapState);
-    const [position, _setPosition] = useRecoilState(positionState);
+    const [position, _setPosition] = useState({ row: START_ROW, col: START_COL });
 
     const positionRef = useRef(position);
     const setPosition = (newPosition) => {
@@ -132,7 +127,7 @@ export default function Landscape() {
         
         newYVelocity && moveY(newYVelocity);
         newXVelocity && moveX(newXVelocity);
-    }
+    };
 
     const handleKeyUp = ({ key }) => {
         switch(key) {
@@ -150,7 +145,7 @@ export default function Landscape() {
                 break;
             default: break;
         }
-    }
+    };
 
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
