@@ -15,7 +15,7 @@ export const TILE_TYPES = {
     WATER_CORNER_EDGE: 7,
 };
 
-export default ({ tileType, xOffsetPx, yOffsetPx }) => {
+export default ({ tileType, xOffsetPx, yOffsetPx, onClick }) => {
     let imgSrc;
     let zIndex = 0;
 
@@ -31,7 +31,22 @@ export default ({ tileType, xOffsetPx, yOffsetPx }) => {
         default: throw new Error('invalid tile type');
     }
 
-    return <Tile src={imgSrc} xOffsetPx={xOffsetPx} yOffsetPx={yOffsetPx} zIndex={zIndex} />
+    const handleClick = (e) => {
+        e.preventDefault();
+
+        if (tileType === TILE_TYPES.WATER) {
+            onClick(TILE_TYPES.GRASS);
+        } else if (tileType === TILE_TYPES.GRASS) {
+            onClick(TILE_TYPES.WATER);
+        }
+    }
+
+    return <Tile
+        src={imgSrc}
+        xOffsetPx={xOffsetPx}
+        yOffsetPx={yOffsetPx}
+        zIndex={zIndex}
+        onClick={(e) => handleClick(e)} />
 }
 
 
@@ -42,4 +57,7 @@ const Tile = styled.img`
     left: 50%;
     top: 0;
     transform: translateX(-50%) translateX(${p => p.xOffsetPx}px) translateY(${p => p.yOffsetPx}px);
+    :hover {
+        filter: brightness(50%);
+    }
 `;

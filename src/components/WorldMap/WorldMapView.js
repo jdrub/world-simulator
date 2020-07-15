@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { atom, useRecoilState } from 'recoil';
 import { DRBN } from './specialWaterLocations';
 import styled from 'styled-components';
 
@@ -12,13 +13,18 @@ import {
     VISIBLE_WIDTH_TILES,
 } from '../../constants';
 
-const getEdgeTile = ({ tileType, isRightEdge, isCornerEdge }) => {
+const tileMapState = atom({
+    key: 'tileMapState',
+    default: buildFullTileMap(),
+});
+
+const getEdgeTileType = ({ tileType, isRightEdge, isCornerEdge }) => {
     return tileType === TILE_TYPES.WATER
         ? isRightEdge ? TILE_TYPES.WATER_RIGHT_EDGE : isCornerEdge ? TILE_TYPES.WATER_CORNER_EDGE : TILE_TYPES.WATER_LEFT_EDGE
         : isRightEdge ? TILE_TYPES.GRASS_RIGHT_EDGE : isCornerEdge ? TILE_TYPES.GRASS_CORNER_EDGE : TILE_TYPES.GRASS_LEFT_EDGE;
 }
 
-const buildFullTileMap = () => {
+function buildFullTileMap() {
     const tileArr = [[]];
 
     const waterLocations = [
@@ -52,7 +58,7 @@ const buildEdgeTileMask = (visibleTileArr) => {
 
         leftEdgeTileMask[i] = (
             <Tile
-                tileType={getEdgeTile({ tileType: visibleTileArr[visibleTileArr.length-1][i], isRightEdge: false })}
+                tileType={getEdgeTileType({ tileType: visibleTileArr[visibleTileArr.length-1][i], isRightEdge: false })}
                 xOffsetPx={leftEdgeXOffsetPx}
                 yOffsetPx={leftEdgeYOffsetPx}
                 key={(visibleTileArr.length-1)*BOARD_HEIGHT_TILES + i + 1} />
@@ -60,7 +66,7 @@ const buildEdgeTileMask = (visibleTileArr) => {
 
         rightEdgeTileMask[i] = (
             <Tile
-                tileType={getEdgeTile({ tileType: visibleTileArr[i][visibleTileArr.length - 1], isRightEdge: true })}
+                tileType={getEdgeTileType({ tileType: visibleTileArr[i][visibleTileArr.length - 1], isRightEdge: true })}
                 xOffsetPx={rightEdgeXOffsetPx}
                 yOffsetPx={rightEdgeYOffsetPx}
                 key={(visibleTileArr.length-1)*BOARD_HEIGHT_TILES + i + 1} />
@@ -74,7 +80,7 @@ const buildEdgeTileMask = (visibleTileArr) => {
 
     const cornerEdgeTileMask = (
         <Tile
-            tileType={getEdgeTile({ tileType: visibleTileArr[visibleTileArr.length - 1][visibleTileArr.length - 1], isCornerEdge: true })}
+            tileType={getEdgeTileType({ tileType: visibleTileArr[visibleTileArr.length - 1][visibleTileArr.length - 1], isCornerEdge: true })}
             xOffsetPx={cornerEdgeXOffsetPx}
             yOffsetPx={cornerEdgeYOffsetPx}
             key={(visibleTileArr.length-1)*BOARD_HEIGHT_TILES + visibleTileArr.length-1 + 2} />
@@ -83,16 +89,21 @@ const buildEdgeTileMask = (visibleTileArr) => {
     return ({ leftEdgeTileMask, rightEdgeTileMask, cornerEdgeTileMask });
 }
 
-const buildVisibleTileMap = ({ fullTileMap, position }) => {
-    const visibleTileArr = [[]];
-
+const getVisibleTileMapBounds = ({ position }) => {
     const rowInt = Math.floor(position.row);
     const colInt = Math.floor(position.col);
 
-    let leftBound = Math.max(Math.floor(colInt - VISIBLE_WIDTH_TILES/2), 0);
-    let rightBound = Math.min(Math.ceil(colInt + VISIBLE_WIDTH_TILES/2), BOARD_WIDTH_TILES - 1);
-    let topBound = Math.max(Math.floor(rowInt - VISIBLE_HEIGHT_TILES/2), 0);
-    let bottomBound = Math.min(Math.ceil(rowInt + VISIBLE_HEIGHT_TILES/2), BOARD_HEIGHT_TILES - 1);
+    const leftBound = Math.max(Math.floor(colInt - VISIBLE_WIDTH_TILES/2), 0);
+    const rightBound = Math.min(Math.ceil(colInt + VISIBLE_WIDTH_TILES/2), BOARD_WIDTH_TILES - 1);
+    const topBound = Math.max(Math.floor(rowInt - VISIBLE_HEIGHT_TILES/2), 0);
+    const bottomBound = Math.min(Math.ceil(rowInt + VISIBLE_HEIGHT_TILES/2), BOARD_HEIGHT_TILES - 1);
+
+    return ({ leftBound, rightBound, topBound, bottomBound });
+}
+const buildVisibleTileMap = ({ fullTileMap, position }) => {
+    const visibleTileArr = [[]];
+
+    const { leftBound, rightBound, topBound, bottomBound } = getVisibleTileMapBounds({ position });
 
     for(let row = topBound, i = 0; row <= bottomBound; row++, i++) {
         visibleTileArr[i] = [];
@@ -104,8 +115,24 @@ const buildVisibleTileMap = ({ fullTileMap, position }) => {
     return visibleTileArr;
 }
 
+const getAbsolutePosition = ({ visibleRow, visibleCol, position }) => {
+    const { leftBound, topBound } = getVisibleTileMapBounds({ position });
+    return ({ row: topBound + visibleRow, col: leftBound + visibleCol });
+}
+
+const handleClick = ({ tileType, visibleRow, visibleCol, setFullTileMap, position, fullTileMap }) => {
+    const absolutePosition = getAbsolutePosition({ visibleRow, visibleCol, position });
+    const newFullTileMap = [];
+    for(let i = 0; i < fullTileMap.length; i++) {
+        newFullTileMap[i] = [...fullTileMap[i]];
+    }
+
+    newFullTileMap[absolutePosition.row][absolutePosition.col] = tileType;
+    setFullTileMap(newFullTileMap);
+}
+
 const WorldMapView = ({ position }) => {
-    const fullTileMap = useMemo(buildFullTileMap, []);
+    const [fullTileMap, setFullTileMap] = useRecoilState(tileMapState);
 
     const visibleTileArr = buildVisibleTileMap({ fullTileMap, position });
 
@@ -117,7 +144,9 @@ const WorldMapView = ({ position }) => {
                 tileType={tileType}
                 xOffsetPx={xOffsetPx}
                 yOffsetPx={yOffsetPx}
-                key={rowIdx*BOARD_HEIGHT_TILES + colIdx} />
+                key={rowIdx*BOARD_HEIGHT_TILES + colIdx}
+                onClick={(tileType) => handleClick({ tileType, visibleRow: rowIdx, visibleCol: colIdx, setFullTileMap, position, fullTileMap })}
+                />
         })
     });
 
