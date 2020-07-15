@@ -1,12 +1,12 @@
-export const BOARD_WIDTH_TILES = 60;
-export const BOARD_HEIGHT_TILES = 60;
+export const BOARD_WIDTH_TILES = 300;
+export const BOARD_HEIGHT_TILES = 300;
 export const VISIBLE_WIDTH_TILES = 10;
 export const VISIBLE_HEIGHT_TILES = 10;
 export const MOVEMENT_SPEED_FACTOR = 1;
 export const TILE_MOVEMENT_STEP = 0.05;
 export const INTERVAL_MS = 12;
-export const START_ROW = 14;
-export const START_COL = 5;
+export const START_ROW = 150;
+export const START_COL = 150;
 
 const TILE_GROWTH_FACTOR = 1;
 export const TILE_WIDTH_PX = 100 * TILE_GROWTH_FACTOR;

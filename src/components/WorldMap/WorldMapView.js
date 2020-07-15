@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { atom, useRecoilState } from 'recoil';
-import { DRBN } from './specialWaterLocations';
 import styled from 'styled-components';
 
 import Tile, { TILE_TYPES } from '../Tile';
@@ -13,32 +12,12 @@ import {
     VISIBLE_WIDTH_TILES,
 } from '../../constants';
 
-const tileMapState = atom({
-    key: 'tileMapState',
-    default: buildFullTileMap(),
-});
+
 
 const getEdgeTileType = ({ tileType, isRightEdge, isCornerEdge }) => {
     return tileType === TILE_TYPES.WATER
         ? isRightEdge ? TILE_TYPES.WATER_RIGHT_EDGE : isCornerEdge ? TILE_TYPES.WATER_CORNER_EDGE : TILE_TYPES.WATER_LEFT_EDGE
         : isRightEdge ? TILE_TYPES.GRASS_RIGHT_EDGE : isCornerEdge ? TILE_TYPES.GRASS_CORNER_EDGE : TILE_TYPES.GRASS_LEFT_EDGE;
-}
-
-function buildFullTileMap() {
-    const tileArr = [[]];
-
-    const waterLocations = [
-        // [1,1 + 10],[1,2 + 10],[5,3 + 10],[6,4 + 10],[0,6],[3,7 + 10],[5,8 + 10],[2,1 + 10],[2,2 + 10],[6,3 + 10],[7,4 + 10],[1,6 + 10],[4,7 + 10],[6,8 + 10],[8,4 + 10],[2,6 + 10],[5,7 + 10],[4,6 + 10],[7,7 + 10],[3,6 + 10],[6,7 + 10],[8,7 + 10]
-    ].concat(DRBN).map(([row, col]) => [row + 10, col]);
-
-    for(let i = 0; i < BOARD_HEIGHT_TILES; i++) {
-        tileArr[i] = [];
-        for(let j = 0; j < BOARD_WIDTH_TILES; j++) {
-            waterLocations.find(([row, col]) => row === i && col === j) ? tileArr[i][j] = TILE_TYPES.WATER : tileArr[i][j] = TILE_TYPES.GRASS;
-        }
-    }
-
-    return tileArr;
 }
 
 const buildEdgeTileMask = (visibleTileArr) => {
@@ -120,20 +99,12 @@ const getAbsolutePosition = ({ visibleRow, visibleCol, position }) => {
     return ({ row: topBound + visibleRow, col: leftBound + visibleCol });
 }
 
-const handleClick = ({ tileType, visibleRow, visibleCol, setFullTileMap, position, fullTileMap }) => {
+const handleClick = ({ tileType, visibleRow, visibleCol, updateTile, position, fullTileMap }) => {
     const absolutePosition = getAbsolutePosition({ visibleRow, visibleCol, position });
-    const newFullTileMap = [];
-    for(let i = 0; i < fullTileMap.length; i++) {
-        newFullTileMap[i] = [...fullTileMap[i]];
-    }
-
-    newFullTileMap[absolutePosition.row][absolutePosition.col] = tileType;
-    setFullTileMap(newFullTileMap);
+    updateTile({ row: absolutePosition.row, col: absolutePosition.col, tileType });
 }
 
-const WorldMapView = ({ position }) => {
-    const [fullTileMap, setFullTileMap] = useRecoilState(tileMapState);
-
+const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     const visibleTileArr = buildVisibleTileMap({ fullTileMap, position });
 
     const tileArrWithOffsets = visibleTileArr.map((row, rowIdx) => {
@@ -145,7 +116,7 @@ const WorldMapView = ({ position }) => {
                 xOffsetPx={xOffsetPx}
                 yOffsetPx={yOffsetPx}
                 key={rowIdx*BOARD_HEIGHT_TILES + colIdx}
-                onClick={(tileType) => handleClick({ tileType, visibleRow: rowIdx, visibleCol: colIdx, setFullTileMap, position, fullTileMap })}
+                onClick={(tileType) => handleClick({ tileType, visibleRow: rowIdx, visibleCol: colIdx, updateTile, position, fullTileMap })}
                 />
         })
     });
