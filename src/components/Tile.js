@@ -1,8 +1,17 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { grassTile, waterTile, grassTileRightEdge, grassTileLeftEdge, grassTileCornerEdge, waterTileLeftEdge, waterTileRightEdge, waterTileCornerEdge } from '../images';
 import { TILE_WIDTH_PX } from '../constants';
+import {
+    grassTile,
+    grassTileCornerEdge,
+    grassTileLeftEdge,
+    grassTileRightEdge,
+    waterTile,
+    waterTileCornerEdge,
+    waterTileLeftEdge,
+    waterTileRightEdge,
+} from '../images';
 
 export const TILE_TYPES = {
     GRASS: 0,

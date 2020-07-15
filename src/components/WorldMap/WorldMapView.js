@@ -1,5 +1,4 @@
-import React, { useMemo } from 'react';
-import { atom, useRecoilState } from 'recoil';
+import React from 'react';
 import styled from 'styled-components';
 
 import Tile, { TILE_TYPES } from '../Tile';

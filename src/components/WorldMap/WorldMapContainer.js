@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import styled, { createGlobalStyle } from 'styled-components';
 import { atom, useRecoilState } from 'recoil'
+import styled, { createGlobalStyle } from 'styled-components';
 
-import waterLocations from './waterLocations';
-import CssReset from '../CssReset';
-import WorldMapView from './WorldMapView';
-import Button from '../Button';
 import { TILE_TYPES } from '../Tile';
+import Button from '../Button';
+import CssReset from '../CssReset';
+import waterLocations from './waterLocations';
+import WorldMapView from './WorldMapView';
 
 import {
     INTERVAL_MS,
