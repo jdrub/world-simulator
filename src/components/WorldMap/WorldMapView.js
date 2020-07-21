@@ -11,7 +11,12 @@ import {
     VISIBLE_WIDTH_TILES,
 } from '../../constants';
 
-
+const getOffsetPx = ({ row, col }) => {
+    return ({
+        xOffsetPx: col*TILE_WIDTH_PX/2 - (row*TILE_WIDTH_PX/2),
+        yOffsetPx: (col*TILE_HEIGHT_PX/2) + (row*TILE_HEIGHT_PX/2),
+    });
+};
 
 const getEdgeTileType = ({ tileType, isRightEdge, isCornerEdge }) => {
     return tileType === TILE_TYPES.WATER
@@ -36,7 +41,7 @@ const buildEdgeTileMask = (visibleTileArr) => {
 
         leftEdgeTileMask[i] = (
             <Tile
-                tileType={getEdgeTileType({ tileType: visibleTileArr[visibleTileArr.length-1][i], isRightEdge: false })}
+                tileType={getEdgeTileType({ tileType: visibleTileArr[visibleTileArr.length-1][i].tileType, isRightEdge: false })}
                 xOffsetPx={leftEdgeXOffsetPx}
                 yOffsetPx={leftEdgeYOffsetPx}
                 key={(visibleTileArr.length-1)*BOARD_HEIGHT_TILES + i + 1} />
@@ -44,7 +49,7 @@ const buildEdgeTileMask = (visibleTileArr) => {
 
         rightEdgeTileMask[i] = (
             <Tile
-                tileType={getEdgeTileType({ tileType: visibleTileArr[i][visibleTileArr.length - 1], isRightEdge: true })}
+                tileType={getEdgeTileType({ tileType: visibleTileArr[i][visibleTileArr.length - 1].tileType, isRightEdge: true })}
                 xOffsetPx={rightEdgeXOffsetPx}
                 yOffsetPx={rightEdgeYOffsetPx}
                 key={(visibleTileArr.length-1)*BOARD_HEIGHT_TILES + i + 1} />
@@ -58,7 +63,7 @@ const buildEdgeTileMask = (visibleTileArr) => {
 
     const cornerEdgeTileMask = (
         <Tile
-            tileType={getEdgeTileType({ tileType: visibleTileArr[visibleTileArr.length - 1][visibleTileArr.length - 1], isCornerEdge: true })}
+            tileType={getEdgeTileType({ tileType: visibleTileArr[visibleTileArr.length - 1][visibleTileArr.length - 1].tileType, isCornerEdge: true })}
             xOffsetPx={cornerEdgeXOffsetPx}
             yOffsetPx={cornerEdgeYOffsetPx}
             key={(visibleTileArr.length-1)*BOARD_HEIGHT_TILES + visibleTileArr.length-1 + 2} />
@@ -71,10 +76,10 @@ const getVisibleTileMapBounds = ({ position }) => {
     const rowInt = Math.floor(position.row);
     const colInt = Math.floor(position.col);
 
-    const leftBound = Math.max(Math.floor(colInt - VISIBLE_WIDTH_TILES/2), 0);
-    const rightBound = Math.min(Math.ceil(colInt + VISIBLE_WIDTH_TILES/2), BOARD_WIDTH_TILES - 1);
-    const topBound = Math.max(Math.floor(rowInt - VISIBLE_HEIGHT_TILES/2), 0);
-    const bottomBound = Math.min(Math.ceil(rowInt + VISIBLE_HEIGHT_TILES/2), BOARD_HEIGHT_TILES - 1);
+    const leftBound = Math.max(Math.floor(colInt - VISIBLE_WIDTH_TILES/2), VISIBLE_WIDTH_TILES/2);
+    const rightBound = Math.min(Math.ceil(colInt + VISIBLE_WIDTH_TILES/2), BOARD_WIDTH_TILES - 1 - VISIBLE_WIDTH_TILES/2);
+    const topBound = Math.max(Math.floor(rowInt - VISIBLE_HEIGHT_TILES/2), VISIBLE_HEIGHT_TILES/2);
+    const bottomBound = Math.min(Math.ceil(rowInt + VISIBLE_HEIGHT_TILES/2), BOARD_HEIGHT_TILES - 1 - VISIBLE_HEIGHT_TILES/2);
 
     return ({ leftBound, rightBound, topBound, bottomBound });
 }
@@ -86,7 +91,7 @@ const buildVisibleTileMap = ({ fullTileMap, position }) => {
     for(let row = topBound, i = 0; row <= bottomBound; row++, i++) {
         visibleTileArr[i] = [];
         for(let col = leftBound, j = 0; col <= rightBound; col++, j++) {
-            visibleTileArr[i][j] = fullTileMap[row][col];
+            visibleTileArr[i][j] = { tileType: fullTileMap[row][col], key: `${row},${col}` };
         }
     }
 
@@ -104,33 +109,39 @@ const handleClick = ({ tileType, visibleRow, visibleCol, updateTile, position, f
 }
 
 const WorldMapView = ({ position, fullTileMap, updateTile }) => {
-    const visibleTileArr = buildVisibleTileMap({ fullTileMap, position });
+    const visibleTileMap = buildVisibleTileMap({ fullTileMap, position });
 
-    const tileArrWithOffsets = visibleTileArr.map((row, rowIdx) => {
-        return row.map((tileType, colIdx) => {
+    const visibleTileMapWithOffsets = visibleTileMap.map((row, rowIdx) => {
+        return row.map(({ tileType, key }, colIdx) => {
             const { xOffsetPx, yOffsetPx } = getOffsetPx({ row: rowIdx, col: colIdx });
 
             return <Tile
                 tileType={tileType}
                 xOffsetPx={xOffsetPx}
                 yOffsetPx={yOffsetPx}
-                key={rowIdx*BOARD_HEIGHT_TILES + colIdx}
+                key={key}
                 onClick={(tileType) => handleClick({ tileType, visibleRow: rowIdx, visibleCol: colIdx, updateTile, position, fullTileMap })}
                 />
         })
     });
 
-    const { leftEdgeTileMask, rightEdgeTileMask, cornerEdgeTileMask } = buildEdgeTileMask(visibleTileArr);
+    const { leftEdgeTileMask, rightEdgeTileMask, cornerEdgeTileMask } = buildEdgeTileMask(visibleTileMap);
+
+    const { xOffsetPx: visibleTileMapXOffsetPx, yOffsetPx: visibleTileMapYOffsetPx } = getOffsetPx({ row: position.row % 1, col: position.col % 1 });
+    const { xOffsetPx: xConstOffsetPx, yOffsetPx: yConstOffsetPx } = getOffsetPx({ row: 1, col: 1 });
+
+    const { xOffsetPx: rightEdgeMaskXOffsetPx, yOffsetPx: rightEdgeMaskYOffsetPx } = getOffsetPx({ row: position.row % 1, col: 0 });
+    const { xOffsetPx: leftEdgeMaskXOffsetPx, yOffsetPx: leftEdgeMaskYOffsetPx } = getOffsetPx({ row: 0, col: position.col % 1 });
 
     return (
         <>
-            <OffsetWrapper position={position}>
-                {tileArrWithOffsets}
+            <OffsetWrapper xOffsetPx={visibleTileMapXOffsetPx} yOffsetPx={visibleTileMapYOffsetPx} xConstOffsetPx={xConstOffsetPx} yConstOffsetPx={yConstOffsetPx}>
+                {visibleTileMapWithOffsets}
             </OffsetWrapper>
-            <LeftEdgeMaskOffsetWrapper position={position}>
+            <LeftEdgeMaskOffsetWrapper xOffsetPx={leftEdgeMaskXOffsetPx} yOffsetPx={leftEdgeMaskYOffsetPx}>
                 {leftEdgeTileMask}
             </LeftEdgeMaskOffsetWrapper>
-            <RightEdgeMaskOffsetWrapper position={position}>
+            <RightEdgeMaskOffsetWrapper xOffsetPx={rightEdgeMaskXOffsetPx} yOffsetPx={rightEdgeMaskYOffsetPx}>
                 {rightEdgeTileMask}
             </RightEdgeMaskOffsetWrapper>
             {cornerEdgeTileMask}
@@ -138,40 +149,26 @@ const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     );
 }
 
-const getOffsetPx = ({ row, col }) => {
-    return ({
-        xOffsetPx: col*TILE_WIDTH_PX/2 - (row*TILE_WIDTH_PX/2),
-        yOffsetPx: (col*TILE_HEIGHT_PX/2) + (row*TILE_HEIGHT_PX/2),
-    });
-};
-
-const OffsetWrapper = styled.div.attrs(({ position }) => {
-    const { xOffsetPx, yOffsetPx } = getOffsetPx({ row: position.row % 1, col: position.col % 1 });
-
-    const { xOffsetPx: xConstOffsetPx, yOffsetPx: yConstOffsetPx } = getOffsetPx({ row: 1, col: 1 });
+const OffsetWrapper = styled.div.attrs(({ xOffsetPx, yOffsetPx, xConstOffsetPx, yConstOffsetPx }) => {
     return {
         style: {
-            transform: `translateX(${-1*xOffsetPx + xConstOffsetPx}px) translateY(${-1*yOffsetPx + yConstOffsetPx}px)`
+            transform: `translateX(${-1*xOffsetPx + xConstOffsetPx}px) translateY(${-1*yOffsetPx + yConstOffsetPx}px) translateZ(0)`
         }
     }
 })``;
 
-const RightEdgeMaskOffsetWrapper = styled.div.attrs(({ position }) => {
-    const { xOffsetPx, yOffsetPx } = getOffsetPx({ row: position.row % 1, col: 0 });
-
+const RightEdgeMaskOffsetWrapper = styled.div.attrs(({ xOffsetPx, yOffsetPx }) => {
     return {
         style: {
-            transform: `translateX(${-1*xOffsetPx}px) translateY(${-1*yOffsetPx}px)`
+            transform: `translateX(${-1*xOffsetPx}px) translateY(${-1*yOffsetPx}px) translateZ(0)`
         }
     }
 })``;
 
-const LeftEdgeMaskOffsetWrapper = styled.div.attrs(({ position }) => {
-    const { xOffsetPx, yOffsetPx } = getOffsetPx({ row: 0, col: position.col % 1 });
-
+const LeftEdgeMaskOffsetWrapper = styled.div.attrs(({ xOffsetPx, yOffsetPx }) => {
     return {
         style: {
-            transform: `translateX(${-1*xOffsetPx}px) translateY(${-1*yOffsetPx}px)`
+            transform: `translateX(${-1*xOffsetPx}px) translateY(${-1*yOffsetPx}px) translateZ(0)`
         }
     }
 })``;

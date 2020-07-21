@@ -65,7 +65,7 @@ const Tile = styled.img`
     position: absolute;
     left: 50%;
     top: 0;
-    transform: translateX(-50%) translateX(${p => p.xOffsetPx}px) translateY(${p => p.yOffsetPx}px);
+    transform: translateX(-50%) translateX(${p => p.xOffsetPx}px) translateY(${p => p.yOffsetPx}px) translateZ(0);
     :hover {
         filter: brightness(50%);
     }
