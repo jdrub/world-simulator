@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 
-const INTERVAL = 1000;
+import { INTERVAL_MS } from '../constants';
+
 const updateFns = new Set();
 
 const runUpdateFns = () => { updateFns.forEach(fn => fn()) };
@@ -21,7 +22,7 @@ const unregisterLoopSubscriber = ({ updateFn, rafRef }) => {
 
 const runGameLoop = ({ rafRef, prevTimeRef }) => {
     const animate = time => {
-        if (time - prevTimeRef.current > INTERVAL) {
+        if (time - prevTimeRef.current > INTERVAL_MS) {
             prevTimeRef.current = time;
             runUpdateFns();
         }
