@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useReducer } from 'react';
 import { atom, useRecoilState } from 'recoil'
 import styled, { createGlobalStyle } from 'styled-components';
 
@@ -8,8 +8,9 @@ import CssReset from '../CssReset';
 import waterLocations from './waterLocations';
 import WorldMapView from './WorldMapView';
 
+import { useGameLoop } from '../../hooks';
+
 import {
-    INTERVAL_MS,
     START_COL,
     START_ROW,
     TILE_HEIGHT_PX,
@@ -21,6 +22,9 @@ import {
     BOARD_WIDTH_TILES,
     BOARD_HEIGHT_TILES,
 } from '../../constants';
+
+const KEY_PRESSED = 'key_pressed';
+const KEY_RELEASED = 'key_released';
 
 const tileMapState = atom({
     key: 'tileMapState',
@@ -40,6 +44,46 @@ function buildFullTileMap() {
     return tileArr;
 }
 
+const keysPressedReducer = (state, {type, payload, currentState}) => {
+    // this is unbelievably janky to pass currentState to this reducer, i'm not
+    // sure how to avoid this and get the proper state quite yet given my
+    // current knowledge of how hooks work
+
+    if (type === KEY_PRESSED) {
+        switch(payload) {
+            case 'ArrowUp':
+            case 'w':
+                return { ...currentState, y: -1 };
+            case 'ArrowDown':
+            case 's':
+                return { ...currentState, y: 1 };
+            case 'ArrowLeft':
+            case 'a':
+                return { ...currentState, x: -1 };
+            case 'ArrowRight':
+            case 'd':
+                return { ...currentState, x: 1 };
+            default:
+                return { ...currentState };
+        }
+    } else if (type === KEY_RELEASED) {
+        switch(payload) {
+            case 'ArrowUp':
+            case 'ArrowDown':
+            case 'w':
+            case 's':
+                return { ...currentState, y: 0 };
+            case 'ArrowLeft':
+            case 'ArrowRight':
+            case 'a':
+            case 'd':
+                return { ...currentState, x: 0 };
+            default:
+                return { ...currentState };
+        }
+    }
+}
+
 export default function Landscape() {
     const [fullTileMap, setFullTileMap] = useRecoilState(tileMapState);
     const [position, _setPosition] = useState({ row: START_ROW, col: START_COL });
@@ -50,101 +94,30 @@ export default function Landscape() {
         _setPosition(newPosition);
     }
 
-    let moveYIntervalId;
-    let moveXIntervalId;
-
-    const moveY = (newVelocity) => {
-        clearInterval(moveYIntervalId);
-        moveYIntervalId = setInterval(() => {
-            moveHelper({
-                newVelocity,
-                isXOffset: false,
-            });
-        }, INTERVAL_MS)
-    };
-
-    const moveX = (newVelocity) => {
-        clearInterval(moveXIntervalId);
-        moveXIntervalId = setInterval(() => {
-            moveHelper({
-                newVelocity,
-                isXOffset: true,
-            });
-        }, INTERVAL_MS)
-    };
-
-    const stopMoveX = () => {
-        clearInterval(moveXIntervalId);
+    const [velocityState, _dispatchKeyEvent] = useReducer(keysPressedReducer, {x: 0, y: 0});
+    const velocityStateRef = useRef(velocityState);
+    const dispatchKeyEvent = (action) => {
+        velocityStateRef.current = keysPressedReducer(velocityState, action);
+        _dispatchKeyEvent(action);
     }
 
-    const stopMoveY = () => {
-        clearInterval(moveYIntervalId);
-    }
-
-    const moveHelper = ({ newVelocity, isXOffset }) => {
-        if (isXOffset) {
-            setPosition({
-                row: positionRef.current.row,
-                col: positionRef.current.col + newVelocity*TILE_MOVEMENT_STEP,
-            });
-        } else {
-            setPosition({
-                row: positionRef.current.row + newVelocity*TILE_MOVEMENT_STEP,
-                col: positionRef.current.col,
-            });
-        }
-    };
+    useGameLoop(() => {
+        setPosition({
+            row: positionRef.current.row + velocityStateRef.current.y*TILE_MOVEMENT_STEP,
+            col: positionRef.current.col + velocityStateRef.current.x*TILE_MOVEMENT_STEP,
+        });
+    })
     
     const handleKeyDown = ({ key, repeat }) => {
         if (repeat) {
             return;
         }
 
-        let newYVelocity;
-        let newXVelocity;
-
-        switch(key) {
-            case 'ArrowUp':
-            case 'w':
-                newYVelocity = -1;
-                break;
-            case 'ArrowDown':
-            case 's':
-                newYVelocity = 1;
-                break;
-            case 'ArrowLeft':
-            case 'a':
-                newXVelocity = -1;
-                break;
-            case 'ArrowRight':
-            case 'd':
-                newXVelocity = 1;
-                break;
-            default:
-                break;
-        }
-
-        
-        newYVelocity && moveY(newYVelocity);
-        newXVelocity && moveX(newXVelocity);
+        dispatchKeyEvent({ type: KEY_PRESSED, payload: key, currentState: velocityStateRef.current });
     };
 
     const handleKeyUp = ({ key }) => {
-        switch(key) {
-            case 'ArrowUp':
-            case 'ArrowDown':
-            case 'w':
-            case 's':
-                stopMoveY();
-                break;
-            case 'ArrowLeft':
-            case 'ArrowRight':
-            case 'a':
-            case 'd':
-                stopMoveX();
-                break;
-            default: break;
-        }
+        dispatchKeyEvent({ type: KEY_RELEASED, payload: key, currentState: velocityStateRef.current });
     };
 
     useEffect(() => {
@@ -168,7 +141,6 @@ export default function Landscape() {
     }
 
     const handleExportClick = () => {
-        // console.log(JSON.stringify(fullTileMap));
         // get water locations
         const waterLocations = [];
         for(let row = 0; row < fullTileMap.length; row++) {
@@ -208,6 +180,7 @@ const Background = styled.div`
 
 const Wrapper = styled.div`
     position: relative;
+    overflow: hidden;
 
     left: 50%;
     top: 50%;
