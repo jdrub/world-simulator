@@ -24,7 +24,7 @@ export const TILE_TYPES = {
     WATER_CORNER_EDGE: 7,
 };
 
-export default ({ tileType, xOffsetPx, yOffsetPx, onClick }) => {
+export default ({ tileType, xOffsetPx, yOffsetPx, onClick, className }) => {
     let imgSrc;
     let zIndex = 0;
 
@@ -55,7 +55,8 @@ export default ({ tileType, xOffsetPx, yOffsetPx, onClick }) => {
         xOffsetPx={xOffsetPx}
         yOffsetPx={yOffsetPx}
         zIndex={zIndex}
-        onClick={(e) => handleClick(e)} />
+        onClick={(e) => handleClick(e)}
+        className={className} />
 }
 
 

@@ -62,7 +62,7 @@ const buildEdgeTileMask = (visibleTileArr) => {
     } = getOffsetPx({ row: visibleTileArr.length - 1, col: visibleTileArr.length - 1 });
 
     const cornerEdgeTileMask = (
-        <Tile
+        <CornerEdgeTile
             tileType={getEdgeTileType({ tileType: visibleTileArr[visibleTileArr.length - 1][visibleTileArr.length - 1].tileType, isCornerEdge: true })}
             xOffsetPx={cornerEdgeXOffsetPx}
             yOffsetPx={cornerEdgeYOffsetPx}
@@ -172,6 +172,10 @@ const LeftEdgeMaskOffsetWrapper = styled.div.attrs(({ xOffsetPx, yOffsetPx }) =>
         }
     }
 })``;
+
+const CornerEdgeTile = styled(Tile)`
+    clip-path: polygon(53% 67.39%, 27.00% 86.66%, 54% 107.72%)
+`;
 
 export {
     WorldMapView as default
