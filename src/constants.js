@@ -13,3 +13,6 @@ export const TILE_WIDTH_PX = 100 * TILE_GROWTH_FACTOR;
 export const TILE_HEIGHT_PX = 57.735 * TILE_GROWTH_FACTOR; // this is mathematically derived by hand based on the image asset
 export const TILE_SIDE_LENGTH_PX = Math.sqrt(Math.pow(TILE_WIDTH_PX/2, 2) + Math.pow(TILE_HEIGHT_PX/2, 2));
 export const TILE_Z_HEIGHT_PX = 20.69 * TILE_GROWTH_FACTOR; // measured
+
+const degToRad = (deg) => Math.PI * deg / 180;
+export const COS_45_DEGS = Math.cos(degToRad(45));
