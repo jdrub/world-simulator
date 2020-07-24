@@ -75,7 +75,7 @@ function buildFullTileMap() {
     return tileArr;
 }
 
-const getVelocityGivenKeysPressed = ({ keysPressed }) => {
+const getVelocityGivenKeysPressed = (keysPressed) => {
     let filteredKeys = [];
     keysPressed.forEach(keyPressed => {
         filteredKeys.push(keyPressed);
@@ -87,19 +87,16 @@ const getVelocityGivenKeysPressed = ({ keysPressed }) => {
     return DIRECTION_TO_VELOCITY[direction];
 }
 
-const keysPressedReducer = (state, {type, payload, currentState}) => {
-    // this is unbelievably janky to pass currentState to this reducer, i'm not
+const keysPressedReducer = (state, {type, payload, currentKeysPressed}) => {
+    // this is unbelievably janky to pass currentKeysPressed to this reducer, i'm not
     // sure how to avoid this and get the proper state quite yet given my
     // current knowledge of how hooks work
 
-    let keysPressed = [...currentState.keysPressed];
     const keyChanged = KEY_TO_DIRECTION[payload];
     if (type === KEY_PRESSED) {
-        keysPressed.push(keyChanged);
-        return { ...currentState, keysPressed: keysPressed };
+        return [ ...currentKeysPressed, keyChanged ];
     } else if (type === KEY_RELEASED) {
-        keysPressed = keysPressed.filter(dir => dir !== keyChanged);
-        return { ...currentState, keysPressed: keysPressed };
+        return currentKeysPressed.filter(dir => dir !== keyChanged);
     }
 }
 
@@ -113,10 +110,10 @@ export default function Landscape() {
         _setPosition(newPosition);
     }
 
-    const [keysPressedState, _dispatchKeyEvent] = useReducer(keysPressedReducer, { keysPressed: [] });
+    const [keysPressedState, _dispatchKeyEvent] = useReducer(keysPressedReducer, []);
     const keysPressedStateRef = useRef(keysPressedState);
     const dispatchKeyEvent = (action) => {
-        keysPressedStateRef.current = keysPressedReducer(keysPressedState, action);
+        keysPressedStateRef.current = keysPressedReducer(keysPressedState, action );
         _dispatchKeyEvent(action);
     }
 
@@ -134,11 +131,11 @@ export default function Landscape() {
             return;
         }
 
-        dispatchKeyEvent({ type: KEY_PRESSED, payload: key, currentState: keysPressedStateRef.current });
+        dispatchKeyEvent({ type: KEY_PRESSED, payload: key, currentKeysPressed: keysPressedStateRef.current });
     };
 
     const handleKeyUp = ({ key }) => {
-        dispatchKeyEvent({ type: KEY_RELEASED, payload: key, currentState: keysPressedStateRef.current });
+        dispatchKeyEvent({ type: KEY_RELEASED, payload: key, currentKeysPressed: keysPressedStateRef.current });
     };
 
     useEffect(() => {
