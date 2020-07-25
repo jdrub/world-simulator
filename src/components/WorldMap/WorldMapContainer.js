@@ -27,6 +27,36 @@ import {
 const KEY_PRESSED = 'key_pressed';
 const KEY_RELEASED = 'key_released';
 
+const KEY_TO_DIRECTION = {
+    'ArrowUp': 'N',
+    'ArrowRight': 'E',
+    'ArrowDown': 'S',
+    'ArrowLeft': 'W',
+    'w': 'N',
+    'd': 'E',
+    's': 'S',
+    'a': 'W'
+};
+
+const DIRECTION_TO_VELOCITY = {
+    '': {xVelocity: 0, yVelocity: 0},
+    'E': {xVelocity: 1, yVelocity: 0},
+    'EN': {xVelocity: COS_45_DEGS, yVelocity: -COS_45_DEGS},
+    'ES': {xVelocity: COS_45_DEGS, yVelocity: COS_45_DEGS},
+    'N': {xVelocity: 0, yVelocity: -1},
+    'NW': {xVelocity: -COS_45_DEGS, yVelocity: -COS_45_DEGS},
+    'S': {xVelocity: 0, yVelocity: 1},
+    'SW': {xVelocity: -COS_45_DEGS, yVelocity: COS_45_DEGS},
+    'W': {xVelocity: -1, yVelocity: 0}
+};
+
+const INCONSISTENT_KEY_MAP = {
+    'E': 'W',
+    'N': 'S',
+    'S': 'N',
+    'W': 'E'
+};
+
 const tileMapState = atom({
     key: 'tileMapState',
     default: buildFullTileMap(),
@@ -45,51 +75,28 @@ function buildFullTileMap() {
     return tileArr;
 }
 
-const getVelocityGivenKeysPressed = ({ xKeyDir, yKeyDir }) => {
-    if (xKeyDir !== 0 && yKeyDir !== 0) {
-        return { xVelocity: xKeyDir * COS_45_DEGS, yVelocity: yKeyDir * COS_45_DEGS };
-    } else {
-        return { xVelocity: xKeyDir, yVelocity: yKeyDir }
-    }
+const getVelocityGivenKeysPressed = (keysPressed) => {
+    let filteredKeys = [];
+    keysPressed.forEach(keyPressed => {
+        filteredKeys.push(keyPressed);
+        filteredKeys = filteredKeys.filter(key => key !== INCONSISTENT_KEY_MAP[keyPressed]);
+    });
+    filteredKeys.sort();
+
+    const direction = filteredKeys.join('');
+    return DIRECTION_TO_VELOCITY[direction];
 }
 
-const keysPressedReducer = (state, {type, payload, currentState}) => {
-    // this is unbelievably janky to pass currentState to this reducer, i'm not
+const keysPressedReducer = (state, {type, payload, currentKeysPressed}) => {
+    // this is unbelievably janky to pass currentKeysPressed to this reducer, i'm not
     // sure how to avoid this and get the proper state quite yet given my
     // current knowledge of how hooks work
 
+    const keyChanged = KEY_TO_DIRECTION[payload];
     if (type === KEY_PRESSED) {
-        switch(payload) {
-            case 'ArrowUp':
-            case 'w':
-                return { ...currentState, yKeyDir: -1 };
-            case 'ArrowDown':
-            case 's':
-                return { ...currentState, yKeyDir: 1 };
-            case 'ArrowLeft':
-            case 'a':
-                return { ...currentState, xKeyDir: -1 };
-            case 'ArrowRight':
-            case 'd':
-                return { ...currentState, xKeyDir: 1 };
-            default:
-                return { ...currentState };
-        }
+        return [ ...currentKeysPressed, keyChanged ];
     } else if (type === KEY_RELEASED) {
-        switch(payload) {
-            case 'ArrowUp':
-            case 'ArrowDown':
-            case 'w':
-            case 's':
-                return { ...currentState, yKeyDir: 0 };
-            case 'ArrowLeft':
-            case 'ArrowRight':
-            case 'a':
-            case 'd':
-                return { ...currentState, xKeyDir: 0 };
-            default:
-                return { ...currentState };
-        }
+        return currentKeysPressed.filter(dir => dir !== keyChanged);
     }
 }
 
@@ -103,10 +110,10 @@ export default function Landscape() {
         _setPosition(newPosition);
     }
 
-    const [keysPressedState, _dispatchKeyEvent] = useReducer(keysPressedReducer, { xKeyDir: 0, yKeyDir: 0 });
+    const [keysPressedState, _dispatchKeyEvent] = useReducer(keysPressedReducer, []);
     const keysPressedStateRef = useRef(keysPressedState);
     const dispatchKeyEvent = (action) => {
-        keysPressedStateRef.current = keysPressedReducer(keysPressedState, action);
+        keysPressedStateRef.current = keysPressedReducer(keysPressedState, action );
         _dispatchKeyEvent(action);
     }
 
@@ -124,11 +131,11 @@ export default function Landscape() {
             return;
         }
 
-        dispatchKeyEvent({ type: KEY_PRESSED, payload: key, currentState: keysPressedStateRef.current });
+        dispatchKeyEvent({ type: KEY_PRESSED, payload: key, currentKeysPressed: keysPressedStateRef.current });
     };
 
     const handleKeyUp = ({ key }) => {
-        dispatchKeyEvent({ type: KEY_RELEASED, payload: key, currentState: keysPressedStateRef.current });
+        dispatchKeyEvent({ type: KEY_RELEASED, payload: key, currentKeysPressed: keysPressedStateRef.current });
     };
 
     useEffect(() => {
