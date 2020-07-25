@@ -1,0 +1,10 @@
+export const TILE_TYPES = {
+    GRASS: 0,
+    GRASS_RIGHT_EDGE: 1,
+    GRASS_LEFT_EDGE: 2,
+    GRASS_CORNER_EDGE: 3,
+    WATER: 4,
+    WATER_RIGHT_EDGE: 5,
+    WATER_LEFT_EDGE: 6,
+    WATER_CORNER_EDGE: 7,
+};

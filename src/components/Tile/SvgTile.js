@@ -1,36 +1,29 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { TILE_WIDTH_PX } from '../constants';
+import { TILE_WIDTH_PX } from '../../constants';
 import {
-    grassTile,
+    GrassTileSvg,
     grassTileCornerEdge,
     grassTileLeftEdge,
     grassTileRightEdge,
-    waterTile,
+    WaterTileSvg,
     waterTileCornerEdge,
     waterTileLeftEdge,
     waterTileRightEdge,
-} from '../images';
+} from '../../images';
 
-export const TILE_TYPES = {
-    GRASS: 0,
-    GRASS_RIGHT_EDGE: 1,
-    GRASS_LEFT_EDGE: 2,
-    GRASS_CORNER_EDGE: 3,
-    WATER: 4,
-    WATER_RIGHT_EDGE: 5,
-    WATER_LEFT_EDGE: 6,
-    WATER_CORNER_EDGE: 7,
-};
+import { TILE_TYPES } from './constants';
 
 export default ({ tileType, xOffsetPx, yOffsetPx, onClick, className }) => {
     let imgSrc;
+    let SvgTile;
+    let top = '0';
     let zIndex = 0;
 
     switch(tileType) {
-        case(TILE_TYPES.WATER): imgSrc = waterTile; break;
-        case(TILE_TYPES.GRASS): imgSrc = grassTile; break;
+        case(TILE_TYPES.WATER): imgSrc = undefined; SvgTile = WaterTileSvg; top = '7px'; break;
+        case(TILE_TYPES.GRASS): imgSrc = undefined; SvgTile = GrassTileSvg; break;
         case(TILE_TYPES.GRASS_RIGHT_EDGE): imgSrc = grassTileRightEdge; zIndex = 2; break;
         case(TILE_TYPES.GRASS_LEFT_EDGE): imgSrc = grassTileLeftEdge; zIndex = 2; break;
         case(TILE_TYPES.GRASS_CORNER_EDGE): imgSrc = grassTileCornerEdge; zIndex = 1; break;
@@ -50,13 +43,27 @@ export default ({ tileType, xOffsetPx, yOffsetPx, onClick, className }) => {
         }
     }
 
-    return <Tile
-        src={imgSrc}
-        xOffsetPx={xOffsetPx}
-        yOffsetPx={yOffsetPx}
-        zIndex={zIndex}
-        onClick={(e) => handleClick(e)}
-        className={className} />
+    return imgSrc
+        ? (
+            <Tile
+                src={imgSrc}
+                xOffsetPx={xOffsetPx}
+                yOffsetPx={yOffsetPx}
+                zIndex={zIndex}
+                onClick={(e) => handleClick(e)}
+                className={className} />
+        ) : (
+            <SvgTileWrapper
+                src={imgSrc}
+                top={top}
+                xOffsetPx={xOffsetPx}
+                yOffsetPx={yOffsetPx}
+                zIndex={zIndex}
+                onClick={(e) => handleClick(e)}
+                className={className}>
+                <SvgTile />
+            </SvgTileWrapper>
+        )
 }
 
 
@@ -66,6 +73,18 @@ const Tile = styled.img`
     position: absolute;
     left: 50%;
     top: 0;
+    transform: translateX(-50%) translateX(${p => p.xOffsetPx}px) translateY(${p => p.yOffsetPx}px) translateZ(0);
+    :hover {
+        filter: brightness(50%);
+    }
+`;
+
+const SvgTileWrapper = styled.div`
+    width: ${TILE_WIDTH_PX}px;
+    z-index: ${p => p.zIndex};
+    position: absolute;
+    left: 50%;
+    top: ${p => p.top};
     transform: translateX(-50%) translateX(${p => p.xOffsetPx}px) translateY(${p => p.yOffsetPx}px) translateZ(0);
     :hover {
         filter: brightness(50%);
