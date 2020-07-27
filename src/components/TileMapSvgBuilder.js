@@ -6,6 +6,7 @@ import {
 
 const TILE_WIDTH = 424.26;
 const TILE_HEIGHT = 329.44;
+const WG_HEIGHT_DIFF = TILE_HEIGHT - 299.64;
 const VIEWBOX_WIDTH = TILE_WIDTH * VISIBLE_WIDTH_TILES;
 const VIEWBOX_HEIGHT = TILE_HEIGHT * VISIBLE_HEIGHT_TILES;
 
@@ -107,14 +108,14 @@ export const getGrassTilePath = ({ xOffset, yOffset }) => `
 export const getWaterTilePath = ({ xOffset, yOffset }) => `
     <g class='tile' transform='translate(${xOffset}, ${yOffset})'>
         <g>
-            <polygon class='cls-1-water' points='212.13 274.96 0 152.49 212.13 30.02 424.26 152.49 212.13 274.96'/>
-            <polygon class='cls-2-water' points='212.13 299.64 0 177.17 0 152.49 212.13 274.96 212.13 299.64'/>
-            <polygon class='cls-3-water' points='424.26 152.49 424.26 177.17 212.13 299.64 212.13 274.96 424.26 152.49'/>
+            <polygon class='cls-1-water' points='212.13 ${WG_HEIGHT_DIFF + 274.96} 0 ${WG_HEIGHT_DIFF + 152.49} 212.13 ${WG_HEIGHT_DIFF + 30.02} 424.26 ${WG_HEIGHT_DIFF + 152.49} 212.13 ${WG_HEIGHT_DIFF + 274.96}'/>
+            <polygon class='cls-2-water' points='212.13 ${WG_HEIGHT_DIFF + 299.64} 0 ${WG_HEIGHT_DIFF + 177.17} 0 ${WG_HEIGHT_DIFF + 152.49} 212.13 ${WG_HEIGHT_DIFF + 274.96} 212.13 ${WG_HEIGHT_DIFF + 299.64}'/>
+            <polygon class='cls-3-water' points='424.26 ${WG_HEIGHT_DIFF + 152.49} 424.26 ${WG_HEIGHT_DIFF + 177.17} 212.13 ${WG_HEIGHT_DIFF + 299.64} 212.13 ${WG_HEIGHT_DIFF + 274.96} 424.26 ${WG_HEIGHT_DIFF + 152.49}'/>
         </g>
         <g>
-            <polygon class='cls-4-water' points='212.13 244.95 0 122.47 212.13 0 424.26 122.47 212.13 244.95'/>
-            <polygon class='cls-5-water' points='212.13 269.44 0 146.97 0 122.47 212.13 244.95 212.13 269.44'/>
-            <polygon class='cls-6-water' points='424.26 122.47 424.26 146.97 212.13 269.44 212.13 244.95 424.26 122.47'/>
+            <polygon class='cls-4-water' points='212.13 ${WG_HEIGHT_DIFF + 244.95} 0 ${WG_HEIGHT_DIFF + 122.47} 212.13 ${WG_HEIGHT_DIFF + 0} 424.26 ${WG_HEIGHT_DIFF + 122.47} 212.13 ${WG_HEIGHT_DIFF + 244.95}'/>
+            <polygon class='cls-5-water' points='212.13 ${WG_HEIGHT_DIFF + 269.44} 0 ${WG_HEIGHT_DIFF + 146.97} 0 ${WG_HEIGHT_DIFF + 122.47} 212.13 ${WG_HEIGHT_DIFF + 244.95} 212.13 ${WG_HEIGHT_DIFF + 269.44}'/>
+            <polygon class='cls-6-water' points='424.26 ${WG_HEIGHT_DIFF + 122.47} 424.26 ${WG_HEIGHT_DIFF + 146.97} 212.13 ${WG_HEIGHT_DIFF + 269.44} 212.13 ${WG_HEIGHT_DIFF + 244.95} 424.26 ${WG_HEIGHT_DIFF + 122.47}'/>
         </g>
     </g>
 `;
