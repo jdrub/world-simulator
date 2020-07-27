@@ -11,6 +11,8 @@ import {
     VISIBLE_WIDTH_TILES,
 } from '../../constants';
 
+import TileMapSvgBuilder from '../TileMapSvgBuilder';
+
 const getOffsetPx = ({ row, col }) => {
     return ({
         xOffsetPx: col*TILE_WIDTH_PX/2 - (row*TILE_WIDTH_PX/2),
@@ -111,19 +113,11 @@ const handleClick = ({ tileType, visibleRow, visibleCol, updateTile, position, f
 const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     const visibleTileMap = buildVisibleTileMap({ fullTileMap, position });
 
-    const visibleTileMapWithOffsets = visibleTileMap.map((row, rowIdx) => {
-        return row.map(({ tileType, key }, colIdx) => {
-            const { xOffsetPx, yOffsetPx } = getOffsetPx({ row: rowIdx, col: colIdx });
-
-            return <Tile
-                tileType={tileType}
-                xOffsetPx={xOffsetPx}
-                yOffsetPx={yOffsetPx}
-                key={key}
-                onClick={(tileType) => handleClick({ tileType, visibleRow: rowIdx, visibleCol: colIdx, updateTile, position, fullTileMap })}
-                />
-        })
-    });
+    const svgDataUri = visibleTileMap.reduce((tileMapBuilder, row, rowIdx) => {
+        return row.reduce((builder, { tileType, key }, colIdx) => {
+            return builder.addTile({ tileType, tileRowIdx: rowIdx, tileColIdx: colIdx });
+        }, tileMapBuilder)
+    }, new TileMapSvgBuilder()).build();
 
     const { leftEdgeTileMask, rightEdgeTileMask, cornerEdgeTileMask } = buildEdgeTileMask(visibleTileMap);
 
@@ -136,7 +130,7 @@ const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     return (
         <>
             <OffsetWrapper xOffsetPx={visibleTileMapXOffsetPx} yOffsetPx={visibleTileMapYOffsetPx} xConstOffsetPx={xConstOffsetPx} yConstOffsetPx={yConstOffsetPx}>
-                {visibleTileMapWithOffsets}
+                <img src={svgDataUri} />
             </OffsetWrapper>
             <LeftEdgeMaskOffsetWrapper xOffsetPx={leftEdgeMaskXOffsetPx} yOffsetPx={leftEdgeMaskYOffsetPx}>
                 {leftEdgeTileMask}
@@ -155,7 +149,10 @@ const OffsetWrapper = styled.div.attrs(({ xOffsetPx, yOffsetPx, xConstOffsetPx, 
             transform: `translateX(${-1*xOffsetPx + xConstOffsetPx}px) translateY(${-1*yOffsetPx + yConstOffsetPx}px) translateZ(0)`
         }
     }
-})``;
+})`
+    position: absolute;
+    width: 100%;
+`;
 
 const RightEdgeMaskOffsetWrapper = styled.div.attrs(({ xOffsetPx, yOffsetPx }) => {
     return {
