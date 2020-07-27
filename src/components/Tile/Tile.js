@@ -51,13 +51,16 @@ export default ({ tileType, xOffsetPx, yOffsetPx, onClick, className }) => {
 }
 
 
-const Tile = styled.img`
+const Tile = styled.img.attrs(({ xOffsetPx, yOffsetPx, zIndex }) => ({
+    style: {
+        transform: `translateX(-50%) translateX(${xOffsetPx}px) translateY(${yOffsetPx}px) translateZ(0)`,
+        'z-index': zIndex,
+    }
+}))`
     width: ${TILE_WIDTH_PX}px;
-    z-index: ${p => p.zIndex};
     position: absolute;
     left: 50%;
     top: 0;
-    transform: translateX(-50%) translateX(${p => p.xOffsetPx}px) translateY(${p => p.yOffsetPx}px) translateZ(0);
     :hover {
         filter: brightness(50%);
     }

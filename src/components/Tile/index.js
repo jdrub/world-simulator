@@ -1,6 +1,7 @@
-import SvgTile from './SvgTile';
-import Tile from './Tile';
+import { default as TileComponent } from './SvgTile';
+// import { default as TileComponent } from './Tile';
 
 export { TILE_TYPES } from './constants';
-export default SvgTile;
+
+export default TileComponent;
 
