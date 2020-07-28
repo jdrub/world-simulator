@@ -113,9 +113,9 @@ const handleClick = ({ tileType, visibleRow, visibleCol, updateTile, position, f
 const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     const visibleTileMap = buildVisibleTileMap({ fullTileMap, position });
 
-    const svgDataUri = visibleTileMap.reduce((tileMapBuilder, row, rowIdx) => {
+    const { TileMapSvg, childPaths } = visibleTileMap.reduce((tileMapBuilder, row, rowIdx) => {
         return row.reduce((builder, { tileType, key }, colIdx) => {
-            return builder.addTile({ tileType, tileRowIdx: rowIdx, tileColIdx: colIdx });
+            return builder.addTile({ tileType, tileRowIdx: rowIdx, tileColIdx: colIdx, key });
         }, tileMapBuilder)
     }, new TileMapSvgBuilder()).build();
 
@@ -130,7 +130,7 @@ const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     return (
         <>
             <OffsetWrapper xOffsetPx={visibleTileMapXOffsetPx} yOffsetPx={visibleTileMapYOffsetPx} xConstOffsetPx={xConstOffsetPx} yConstOffsetPx={yConstOffsetPx}>
-                <img src={svgDataUri} />
+                <TileMapSvg>{childPaths}</TileMapSvg>
             </OffsetWrapper>
             <LeftEdgeMaskOffsetWrapper xOffsetPx={leftEdgeMaskXOffsetPx} yOffsetPx={leftEdgeMaskYOffsetPx}>
                 {leftEdgeTileMask}
