@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import styled from 'styled-components';
 
 import Tile, { TILE_TYPES } from '../Tile';
@@ -9,6 +9,8 @@ import {
     TILE_WIDTH_PX,
     VISIBLE_HEIGHT_TILES,
     VISIBLE_WIDTH_TILES,
+    VIEWBOX_WIDTH,
+    VIEWBOX_HEIGHT,
 } from '../../constants';
 
 import TileMapSvgBuilder from '../TileMapSvgBuilder';
@@ -113,12 +115,6 @@ const handleClick = ({ tileType, visibleRow, visibleCol, updateTile, position, f
 const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     const visibleTileMap = buildVisibleTileMap({ fullTileMap, position });
 
-    const { TileMapSvg, childPaths } = visibleTileMap.reduce((tileMapBuilder, row, rowIdx) => {
-        return row.reduce((builder, { tileType, key }, colIdx) => {
-            return builder.addTile({ tileType, tileRowIdx: rowIdx, tileColIdx: colIdx, key });
-        }, tileMapBuilder)
-    }, new TileMapSvgBuilder()).build();
-
     const { leftEdgeTileMask, rightEdgeTileMask, cornerEdgeTileMask } = buildEdgeTileMask(visibleTileMap);
 
     const { xOffsetPx: visibleTileMapXOffsetPx, yOffsetPx: visibleTileMapYOffsetPx } = getOffsetPx({ row: position.row % 1, col: position.col % 1 });
@@ -127,10 +123,22 @@ const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     const { xOffsetPx: rightEdgeMaskXOffsetPx, yOffsetPx: rightEdgeMaskYOffsetPx } = getOffsetPx({ row: position.row % 1, col: 0 });
     const { xOffsetPx: leftEdgeMaskXOffsetPx, yOffsetPx: leftEdgeMaskYOffsetPx } = getOffsetPx({ row: 0, col: position.col % 1 });
 
+    const canvasRef = useRef();
+
+    if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d');
+        visibleTileMap.reduce((tileMapBuilder, row, rowIdx) => {
+            return row.reduce((builder, { tileType, key }, colIdx) => {
+                return builder.addTile({ tileType, tileRowIdx: rowIdx, tileColIdx: colIdx, key, ctx });
+            }, tileMapBuilder)
+        }, new TileMapSvgBuilder());
+    }
+    
     return (
         <>
             <OffsetWrapper xOffsetPx={visibleTileMapXOffsetPx} yOffsetPx={visibleTileMapYOffsetPx} xConstOffsetPx={xConstOffsetPx} yConstOffsetPx={yConstOffsetPx}>
-                <TileMapSvg>{childPaths}</TileMapSvg>
+                {/* <TileMapSvg>{childPaths}</TileMapSvg> */}
+                <StyledCanvas ref={canvasRef} width={VIEWBOX_WIDTH} height={VIEWBOX_HEIGHT} />
             </OffsetWrapper>
             <LeftEdgeMaskOffsetWrapper xOffsetPx={leftEdgeMaskXOffsetPx} yOffsetPx={leftEdgeMaskYOffsetPx}>
                 {leftEdgeTileMask}
@@ -143,6 +151,10 @@ const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     );
 }
 
+const StyledCanvas = styled.canvas`
+    width: 100%;
+    height: 100%;
+`;
 const OffsetWrapper = styled.div.attrs(({ xOffsetPx, yOffsetPx, xConstOffsetPx, yConstOffsetPx }) => {
     return {
         style: {

@@ -16,3 +16,12 @@ export const TILE_Z_HEIGHT_PX = 20.69 * TILE_GROWTH_FACTOR; // measured
 
 const degToRad = (deg) => Math.PI * deg / 180;
 export const COS_45_DEGS = Math.cos(degToRad(45));
+
+
+
+
+export const TILE_WIDTH = 424.26;
+export const TILE_HEIGHT = 329.44;
+export const WG_HEIGHT_DIFF = TILE_HEIGHT - 299.64;
+export const VIEWBOX_WIDTH = TILE_WIDTH * VISIBLE_WIDTH_TILES;
+export const VIEWBOX_HEIGHT = TILE_HEIGHT * VISIBLE_HEIGHT_TILES;
