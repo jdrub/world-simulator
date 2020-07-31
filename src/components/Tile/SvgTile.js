@@ -92,7 +92,7 @@ const SvgTileWrapper = styled.div.attrs(({ xOffsetPx, yOffsetPx, zIndex }) => ({
     z-index: ${p => p.zIndex};
     position: absolute;
     left: 50%;
-    top: ${p => p.top};
+    top: 0;
     :hover {
         filter: brightness(50%);
     }

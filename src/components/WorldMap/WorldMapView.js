@@ -1,5 +1,5 @@
-import React from 'react';
-import styled from 'styled-components';
+import React, { useRef } from 'react';
+import styled, { css } from 'styled-components';
 
 import Tile, { TILE_TYPES } from '../Tile';
 import {
@@ -9,9 +9,10 @@ import {
     TILE_WIDTH_PX,
     VISIBLE_HEIGHT_TILES,
     VISIBLE_WIDTH_TILES,
+    INTERVAL_MS,
 } from '../../constants';
 
-import TileMapSvgBuilder from '../TileMapSvgBuilder';
+import TileMapSvgBuilder, { SvgWrapper } from '../TileMapSvgBuilder';
 
 const getOffsetPx = ({ row, col }) => {
     return ({
@@ -86,18 +87,18 @@ const getVisibleTileMapBounds = ({ position }) => {
     return ({ leftBound, rightBound, topBound, bottomBound });
 }
 const buildVisibleTileMap = ({ fullTileMap, position }) => {
-    const visibleTileArr = [[]];
+    const visibleTileMap = [[]];
 
     const { leftBound, rightBound, topBound, bottomBound } = getVisibleTileMapBounds({ position });
 
     for(let row = topBound, i = 0; row <= bottomBound; row++, i++) {
-        visibleTileArr[i] = [];
+        visibleTileMap[i] = [];
         for(let col = leftBound, j = 0; col <= rightBound; col++, j++) {
-            visibleTileArr[i][j] = { tileType: fullTileMap[row][col], key: `${row},${col}` };
+            visibleTileMap[i][j] = { tileType: fullTileMap[row][col], key: `${row},${col}` };
         }
     }
 
-    return visibleTileArr;
+    return visibleTileMap;
 }
 
 const getAbsolutePosition = ({ visibleRow, visibleCol, position }) => {
@@ -113,11 +114,25 @@ const handleClick = ({ tileType, visibleRow, visibleCol, updateTile, position, f
 const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     const visibleTileMap = buildVisibleTileMap({ fullTileMap, position });
 
-    const { TileMapSvg, childPaths } = visibleTileMap.reduce((tileMapBuilder, row, rowIdx) => {
+    const { childPaths } = visibleTileMap.reduce((tileMapBuilder, row, rowIdx) => {
         return row.reduce((builder, { tileType, key }, colIdx) => {
             return builder.addTile({ tileType, tileRowIdx: rowIdx, tileColIdx: colIdx, key });
         }, tileMapBuilder)
     }, new TileMapSvgBuilder()).build();
+
+    // const visibleTileMapWithOffsets = visibleTileMap.map((row, rowIdx) => {
+    //     return row.map(({ tileType, key }, colIdx) => {
+    //         const { xOffsetPx, yOffsetPx } = getOffsetPx({ row: rowIdx, col: colIdx });
+
+    //         return <Tile
+    //             tileType={tileType}
+    //             xOffsetPx={xOffsetPx}
+    //             yOffsetPx={yOffsetPx}
+    //             key={key}
+    //             onClick={(tileType) => handleClick({ tileType, visibleRow: rowIdx, visibleCol: colIdx, updateTile, position, fullTileMap })}
+    //             />
+    //     })
+    // });
 
     const { leftEdgeTileMask, rightEdgeTileMask, cornerEdgeTileMask } = buildEdgeTileMask(visibleTileMap);
 
@@ -129,8 +144,15 @@ const WorldMapView = ({ position, fullTileMap, updateTile }) => {
 
     return (
         <>
-            <OffsetWrapper xOffsetPx={visibleTileMapXOffsetPx} yOffsetPx={visibleTileMapYOffsetPx} xConstOffsetPx={xConstOffsetPx} yConstOffsetPx={yConstOffsetPx}>
-                <TileMapSvg>{childPaths}</TileMapSvg>
+            <OffsetWrapper
+                xOffsetPx={visibleTileMapXOffsetPx}
+                yOffsetPx={visibleTileMapYOffsetPx}
+                xConstOffsetPx={xConstOffsetPx}
+                yConstOffsetPx={yConstOffsetPx}>
+                    <SvgWrapper>
+                        {childPaths}
+                    </SvgWrapper>
+                    {/* {visibleTileMapWithOffsets} */}
             </OffsetWrapper>
             <LeftEdgeMaskOffsetWrapper xOffsetPx={leftEdgeMaskXOffsetPx} yOffsetPx={leftEdgeMaskYOffsetPx}>
                 {leftEdgeTileMask}
