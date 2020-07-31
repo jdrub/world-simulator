@@ -6,133 +6,47 @@ import {
     VISIBLE_HEIGHT_TILES,
 } from '../constants';
 
-const TILE_WIDTH = 424.26;
-const TILE_HEIGHT = 329.44;
-const WG_HEIGHT_DIFF = TILE_HEIGHT - 299.64;
+const TILE_WIDTH = 2041;
+const TILE_HEIGHT = 1585;
 const VIEWBOX_WIDTH = TILE_WIDTH * VISIBLE_WIDTH_TILES;
 const VIEWBOX_HEIGHT = TILE_HEIGHT * VISIBLE_HEIGHT_TILES;
 
-const Styles = () => (
-<defs>
-    <style>{`
-      .cls-1-grass {
-        fill: #5a3238;
-      }
-
-      .cls-2-grass {
-        fill: #381f23;
-      }
-
-      .cls-3-grass {
-        fill: #512d32;
-      }
-
-      .cls-4-grass {
-        fill: #4f3836;
-      }
-
-      .cls-5-grass {
-        fill: #72514d;
-      }
-
-      .cls-6-grass {
-        fill: #7f5a56;
-      }
-
-      .cls-7-grass {
-        fill: #8bdb78;
-      }
-
-      .cls-8-grass {
-        fill: #56894a;
-      }
-
-      .cls-9-grass {
-        fill: #7cc56b;
-      }
-
-      .cls-1-water {
-        fill: #5a3238;
-      }
-
-      .cls-2-water {
-        fill: #381f23;
-      }
-
-      .cls-3-water {
-        fill: #512d32;
-      }
-
-      .cls-4-water {
-        fill: #78bfdb;
-      }
-
-      .cls-5-water {
-        fill: #4a7789;
-      }
-
-      .cls-6-water {
-        fill: #6bacc5;
-      }
-
-      .tile {
-      }
-
-      .tile:hover {
-            filter: brightness(50%);
-        }
-    `}</style>
-</defs>
-);
-
 const GrassTilePath = () => (
     <>
-        <g>
-            <path className="cls-1-grass" d="M212.13,304.77L0 182.29 212.13 59.82 424.26 182.29 212.13 304.77z"></path>
-            <path className="cls-2-grass" d="M212.13,329.44L0 206.97 0 182.29 212.13 304.77 212.13 329.44z"></path>
-            <path className="cls-3-grass" d="M424.26,182.29L424.26 206.97 212.13 329.44 212.13 304.77 424.26 182.29z"></path>
-        </g>
-        <g>
-            <path className="cls-4-grass" d="M212.13,299.24L0 176.77 0 152.27 212.13 274.75 212.13 299.24z"></path>
-            <path className="cls-5-grass" d="M424.26,152.28L424.26 176.77 212.13 299.24 212.13 274.75 424.26 152.28z"></path>
-            <path className="cls-6-grass" d="M212.13,274.75L0 152.27 212.13 29.8 424.26 152.28 212.13 274.75z"></path>
-        </g>
-        <g>
-            <path className="cls-7-grass" d="M424.26,122.47L318.2 183.71 212.13 244.95 0 122.47 106.07 61.23 212.13 0 424.26 122.47z"></path>
-            <path className="cls-8-grass" d="M212.13,269.26L0 146.79 0 134.63 212.13 257.1 212.13 269.26z"></path>
-            <path className="cls-9-grass" d="M424.26,122.47L424.26 134.63 424.26 146.79 318.2 208.03 212.13 269.26 212.13 257.1 212.13 244.95 318.2 183.71 424.26 122.47z"></path>
-            <path className="cls-8-grass" d="M212.13,257.1L0 134.63 0 122.47 212.13 244.95 212.13 257.1z"></path>
-        </g>
+        <polygon points="2041 589.08 1530.74 883.7 1020.44 1178.33 -0.12 589.08 510.18 294.45 1020.44 -0.13 2041 589.08" fill="#8bdb78"/>
+        <polygon points="1020.44 1295.3 -0.13 706.08 0 589.5 1020 1178.5 1020.44 1295.3" fill="#56894a"/>
+        <polygon points="2041 589.1 2041 647.57 2041 706.08 1530.73 1000.68 1020.44 1295.3 1020.44 1236.79 1020.44 1178.32 1530.73 883.7 2041 589.1" fill="#7cc56b"/>
     </>
-)
-export const getGrassTilePathWithTransform = ({ xOffset, yOffset, key }) => () => (
-    <g className='tile' key={key} transform={`translate(${xOffset}, ${yOffset})`}>
+);
+
+const getGrassTilePathWithTransform = ({ xOffset, yOffset }) => () => (
+    <g className='tile' transform={`translate(${xOffset}, ${yOffset})`}>
         <GrassTilePath />
     </g>
 );
 
 const WaterTilePath = () => (
     <>
-        <g>
-            <path className="cls-1-water" d="M212.13,304.76L0 182.29 212.13 59.82 424.26 182.29 212.13 304.76z"></path>
-            <path className="cls-2-water" d="M212.13,329.44L0 206.97 0 182.29 212.13 304.76 212.13 329.44z"></path>
-            <path className="cls-3-water" d="M424.26,182.29L424.26 206.97 212.13 329.44 212.13 304.76 424.26 182.29z"></path>
-        </g>
-        <g>
-            <path className="cls-4-water" d="M212.13,274.75L0 152.27 212.13 29.8 424.26 152.27 212.13 274.75z"></path>
-            <path className="cls-5-water" d="M212.13,299.24L0 176.77 0 152.27 212.13 274.75 212.13 299.24z"></path>
-            <path className="cls-6-water" d="M424.26,152.27L424.26 176.77 212.13 299.24 212.13 274.75 424.26 152.27z"></path>
-        </g>
+        <polygon points="1020.05 1321.93 -0.46 732.74 1020.04 143.56 2040.54 732.75 1020.05 1321.93" fill="#78bfdb"/>
+        <polygon points="1020.05 1439.76 -0.46 850.57 -0.46 732.74 1020.05 1321.93 1020.05 1439.76" fill="#4a7789"/>
+        <polygon points="2040.54 732.75 2040.54 850.57 2017.53 863.86 1020.05 1439.76 1020.05 1321.93 2040.54 732.75" fill="#6bacc5"/>
     </>
 );
 
-export const getWaterTilePathWithTransform = ({ xOffset, yOffset, key }) => () => (
-    <g className='tile' key={key} transform={`translate(${xOffset}, ${yOffset})`}>
+const getWaterTilePathWithTransform = ({ xOffset, yOffset }) => () => (
+    <g className='tile' transform={`translate(${xOffset}, ${yOffset})`}>
         <WaterTilePath />
     </g>
 );
 
-export const SvgWrapper = ({ children }) => <svg xmlns='http://www.w3.org/2000/svg' viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}><Styles/>{children}</svg>;
+export const SvgWrapper = ({ children, className }) => (
+    <svg
+        className={className}
+        xmlns='http://www.w3.org/2000/svg'
+        viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}>
+            {children}
+    </svg>
+);
 
 const getRelativeOffset = ({ row, col }) => {
     return ({
@@ -162,14 +76,7 @@ export default class TileMapSvgBuilder {
         return this;
     }
 
-    static encode(dataUri) {
-        return dataUri
-            .replace(/>\s{1,}</g, `><`)
-            .replace(/\s{2,}/g, ` `)
-            .replace(/[\r\n%#()<>?[\\\]^`{|}]/g, encodeURIComponent);
-    }
-
     build() {
-        return ({ TileMapSvg: SvgWrapper, childPaths: this.childPaths });
+        return ({ childPaths: this.childPaths });
     }
 }
