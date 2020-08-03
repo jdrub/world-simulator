@@ -55,6 +55,12 @@ const getRelativeOffset = ({ row, col }) => {
     });
 }
 
+const TestSvgGroup = () => (
+    <g>
+        <polygon points="1020.05 1321.93 -0.46 732.74 1020.04 143.56 2040.54 732.75 1020.05 1321.93" fill="#78bfdb"/>
+    </g>
+)
+
 export default class TileMapSvgBuilder {
     constructor() {
         this.childPaths = [];
@@ -72,11 +78,23 @@ export default class TileMapSvgBuilder {
             throw new Error('unsupported tile type');
         }
 
+        // TilePath = TestSvgGroup;
+
         this.childPaths = this.childPaths.concat(<TilePath key={key} />);
         return this;
     }
 
     build() {
-        return ({ childPaths: this.childPaths });
+        return { childPaths: this.childPaths };
+    }
+}
+
+function disableLog() {
+    window.disableLog = true;
+}
+
+function log(...logArgs) {
+    if (!window.disableLog) {
+        console.log(...logArgs);
     }
 }

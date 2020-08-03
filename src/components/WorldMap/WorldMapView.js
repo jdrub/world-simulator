@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useMemo } from 'react';
 import styled, { css } from 'styled-components';
 
 import Tile, { TILE_TYPES } from '../Tile';
@@ -114,25 +114,11 @@ const handleClick = ({ tileType, visibleRow, visibleCol, updateTile, position, f
 const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     const visibleTileMap = buildVisibleTileMap({ fullTileMap, position });
 
-    const { childPaths } = visibleTileMap.reduce((tileMapBuilder, row, rowIdx) => {
+    const { childPaths } = useMemo(() => visibleTileMap.reduce((tileMapBuilder, row, rowIdx) => {
         return row.reduce((builder, { tileType, key }, colIdx) => {
             return builder.addTile({ tileType, tileRowIdx: rowIdx, tileColIdx: colIdx, key });
         }, tileMapBuilder)
-    }, new TileMapSvgBuilder()).build();
-
-    // const visibleTileMapWithOffsets = visibleTileMap.map((row, rowIdx) => {
-    //     return row.map(({ tileType, key }, colIdx) => {
-    //         const { xOffsetPx, yOffsetPx } = getOffsetPx({ row: rowIdx, col: colIdx });
-
-    //         return <Tile
-    //             tileType={tileType}
-    //             xOffsetPx={xOffsetPx}
-    //             yOffsetPx={yOffsetPx}
-    //             key={key}
-    //             onClick={(tileType) => handleClick({ tileType, visibleRow: rowIdx, visibleCol: colIdx, updateTile, position, fullTileMap })}
-    //             />
-    //     })
-    // });
+    }, new TileMapSvgBuilder()).build(), [position.row, position.col]);
 
     const { leftEdgeTileMask, rightEdgeTileMask, cornerEdgeTileMask } = buildEdgeTileMask(visibleTileMap);
 
@@ -152,7 +138,6 @@ const WorldMapView = ({ position, fullTileMap, updateTile }) => {
                     <SvgWrapper>
                         {childPaths}
                     </SvgWrapper>
-                    {/* {visibleTileMapWithOffsets} */}
             </OffsetWrapper>
             <LeftEdgeMaskOffsetWrapper xOffsetPx={leftEdgeMaskXOffsetPx} yOffsetPx={leftEdgeMaskYOffsetPx}>
                 {leftEdgeTileMask}

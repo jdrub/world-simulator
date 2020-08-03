@@ -113,9 +113,14 @@ export default function Landscape() {
     useGameLoop(() => {
         const { xVelocity, yVelocity } = getVelocityGivenKeysPressed(keysPressedStateRef.current);
 
+        const newRow = positionRef.current.row + yVelocity * TILE_MOVEMENT_STEP;
+        const newCol = positionRef.current.col + xVelocity * TILE_MOVEMENT_STEP;
+
         setPosition({
-            row: positionRef.current.row + yVelocity * TILE_MOVEMENT_STEP,
-            col: positionRef.current.col + xVelocity * TILE_MOVEMENT_STEP,
+            row: newRow,
+            col: newCol,
+            // row: Number.parseFloat(newRow).toFixed(2),
+            // col: Number.parseFloat(newCol).toFixed(2),
         });
     })
     
