@@ -11,6 +11,25 @@ const TILE_HEIGHT = 1585;
 const VIEWBOX_WIDTH = TILE_WIDTH * VISIBLE_WIDTH_TILES;
 const VIEWBOX_HEIGHT = TILE_HEIGHT * VISIBLE_HEIGHT_TILES;
 
+const Styles = () => (
+<defs>
+    <style>{`
+        <filter id="lower-brightness" x="0" y="0" width="100%" height="100%">
+            <feComponentTransfer>
+                <feFuncR type="linear" slope="2" />
+                <feFuncG type="linear" slope="2" />
+                <feFuncB type="linear" slope="2" />
+            </feComponentTransfer>
+        </filter>
+        .tile {
+        }
+        .tile:hover * {
+            filter: url(#lower-brightness);
+        }
+    `}</style>
+</defs>
+);
+
 const GrassTilePath = ({ xOffset, yOffset }) => (
     <g className='tile' transform={`translate(${xOffset}, ${yOffset})`}>
         <polygon points="2041 589.08 1530.74 883.7 1020.44 1178.33 -0.12 589.08 510.18 294.45 1020.44 -0.13 2041 589.08" fill="#8bdb78"/>
@@ -32,6 +51,7 @@ export const SvgWrapper = ({ children, className }) => (
         className={className}
         xmlns='http://www.w3.org/2000/svg'
         viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}>
+            <Styles />
             {children}
     </svg>
 );
