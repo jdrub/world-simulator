@@ -68,13 +68,3 @@ export default class TileMapSvgBuilder {
         return { childPaths: this.childPaths };
     }
 }
-
-function disableLog() {
-    window.disableLog = true;
-}
-
-function log(...logArgs) {
-    if (!window.disableLog) {
-        console.log(...logArgs);
-    }
-}
