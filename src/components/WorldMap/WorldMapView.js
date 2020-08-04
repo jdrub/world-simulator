@@ -114,11 +114,14 @@ const handleClick = ({ tileType, visibleRow, visibleCol, updateTile, position, f
 const WorldMapView = ({ position, fullTileMap, updateTile }) => {
     const visibleTileMap = buildVisibleTileMap({ fullTileMap, position });
 
+    // From experiments with multiple approaches, building one large Svg has
+    // significant performance gains over giving React several "Tile" React
+    // Components.
     const { childPaths } = useMemo(() => visibleTileMap.reduce((tileMapBuilder, row, rowIdx) => {
         return row.reduce((builder, { tileType, key }, colIdx) => {
             return builder.addTile({ tileType, tileRowIdx: rowIdx, tileColIdx: colIdx, key });
         }, tileMapBuilder)
-    }, new TileMapSvgBuilder()).build(), [position.row, position.col]);
+    }, new TileMapSvgBuilder()).build(), [Math.floor(position.row), Math.floor(position.col)]);
 
     const { leftEdgeTileMask, rightEdgeTileMask, cornerEdgeTileMask } = buildEdgeTileMask(visibleTileMap);
 
