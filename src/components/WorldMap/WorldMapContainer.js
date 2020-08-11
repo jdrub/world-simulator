@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useReducer } from 'react';
 import { atom, useRecoilState } from 'recoil'
 import styled, { createGlobalStyle } from 'styled-components';
 
-import { TILE_TYPES } from '../Tile';
 import Button from '../Button';
 import CssReset from '../CssReset';
 import waterLocations from './waterLocations';
@@ -23,9 +22,12 @@ import {
     VISIBLE_HEIGHT_TILES,
     VISIBLE_WIDTH_TILES,
 } from '../../constants';
+import { Canvas } from 'react-three-fiber';
 
 const KEY_PRESSED = 'key_pressed';
 const KEY_RELEASED = 'key_released';
+
+const TILE_TYPES = { WATER: 0 };
 
 const tileMapState = atom({
     key: 'tileMapState',
@@ -170,16 +172,22 @@ export default function Landscape() {
         console.log(JSON.stringify(waterLocations));
     }
 
+    const worldWidth = 20;
+    const worldHeight = 20;
+
+
     return(
         <>
             <CssReset />
             <Background>
                 <Button onClick={() => handleExportClick()}>Export</Button>
                 <Wrapper>
-                    <WorldMapView
-                        position={positionRef.current}
-                        fullTileMap={fullTileMap}
-                        updateTile={(params) => handleUpdateTile(params)} />
+                    <Canvas camera={{ zoom: 10, position: [-45, 35.26, -30 ]}}>
+                        <WorldMapView
+                            position={positionRef.current}
+                            fullTileMap={fullTileMap}
+                            updateTile={(params) => handleUpdateTile(params)} />
+                        </Canvas>
                 </Wrapper>
                 <HideBodyOverflow />
             </Background>
@@ -204,9 +212,6 @@ const Wrapper = styled.div`
 
     width: ${TILE_WIDTH_PX * VISIBLE_WIDTH_TILES}px;
     height: ${TILE_HEIGHT_PX * (VISIBLE_HEIGHT_TILES + 1) + TILE_Z_HEIGHT_PX}px;
-
-    /* this clip-path only works when the visible area is square */
-    clip-path: polygon(50% 56px, 100% 53.25%, 100% 55.79%, 50.10% 99.54%, 0px 55.79%, 0px 53.25%);
 
     backface-visibility: hidden; /* this prevents jumpy css transitions in firefox */ 
   `;
